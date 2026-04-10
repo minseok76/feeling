@@ -173,7 +173,11 @@ function clearSessionExtras() {
 async function linkAccountToRosterRow(userId, profile) {
   if (typeof mergeRosterStudentProfile !== 'function') return;
   try {
-    const res = await fetch('data/students.json', { cache: 'no-store' });
+    const rosterUrl =
+      typeof window.emotionCheckinResolve === 'function'
+        ? window.emotionCheckinResolve('data/students.json')
+        : 'data/students.json';
+    const res = await fetch(rosterUrl, { cache: 'no-store' });
     if (!res.ok) return;
     const data = await res.json();
     const students = Array.isArray(data.students) ? data.students : [];

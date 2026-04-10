@@ -2,10 +2,21 @@
 <html lang="ko" class="teacher-page">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>교사 대시보드 - 감정 체크인</title>
-  <!-- 학생용 style.css는 쓰지 않아요. body 가운데 정렬(폰 목업)이 교사 레이아웃을 가리는 문제를 막습니다. -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='24'%3E📊%3C/text%3E%3C/svg%3E">
+  <script>
+    (function () {
+      try {
+        if (localStorage.getItem('emotion-checkin-teacher-theme') === 'light') {
+          document.documentElement.setAttribute('data-teacher-theme', 'light');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/teacher.css">
+  <link rel="stylesheet" href="css/teacher-theme-light.css">
 </head>
 <body class="teacher-body">
 
@@ -46,122 +57,218 @@
 
   <div id="teacher-app-shell" class="teacher-app-shell" style="display:none;">
 
-  <!-- 헤더 -->
+  <div class="teacher-app-layout">
+
   <header class="teacher-header">
     <div class="header-inner">
       <div>
         <h1 class="header-title">📊 감정 체크인 대시보드</h1>
-        <p class="header-sub"><span id="teacher-session-label"></span>2학년 3반 · <span id="today-date"></span></p>
-        <p class="header-sync">같은 브라우저의 학생 창·탭과 실시간 연동</p>
+        <p class="header-sub"><span id="teacher-session-label"></span><span id="teacher-class-label">2학년 3반</span> · <span id="today-date"></span></p>
+        <p class="header-sync teacher-header-sync--desk">같은 브라우저의 학생 창·탭과 실시간 연동</p>
       </div>
-      <div class="header-actions">
-        <button type="button" class="back-btn teacher-logout-btn" id="teacher-logout-btn">로그아웃</button>
+      <div class="header-actions teacher-header-actions--desk">
         <a href="index.html" target="_blank" rel="noopener noreferrer" class="back-btn">학생 앱 ↗ 새 창</a>
       </div>
     </div>
   </header>
 
-  <section class="broadcast-section" aria-label="학생 앱 연동 메시지">
-    <p class="broadcast-hint">학생 앱과 <strong>같은 브라우저</strong>의 다른 창·탭이면, 아래 메시지가 학생 홈에 바로 반영됩니다.</p>
-    <div class="broadcast-row">
-      <input type="text" id="teacher-broadcast-input" class="broadcast-input" maxlength="200" placeholder="예: 오늘도 잘했어요!">
-      <button type="button" class="broadcast-btn" id="teacher-broadcast-send">보내기</button>
-      <button type="button" class="broadcast-btn ghost" id="teacher-broadcast-clear">메시지 지우기</button>
-    </div>
-  </section>
+  <nav class="teacher-desk-tabs" aria-label="교사 메뉴 (PC)">
+    <button type="button" class="teacher-desk-tab is-active" data-teacher-tab="individual" id="teacher-desk-tab-individual">개별보기</button>
+    <button type="button" class="teacher-desk-tab" data-teacher-tab="group" id="teacher-desk-tab-group">단체보기</button>
+    <button type="button" class="teacher-desk-tab" data-teacher-tab="manage" id="teacher-desk-tab-manage">학생관리</button>
+    <button type="button" class="teacher-desk-tab" data-teacher-tab="settings" id="teacher-desk-tab-settings">설정</button>
+  </nav>
 
-  <!-- 요약 카드 4개 -->
-  <section class="summary-section">
+  <section class="summary-section teacher-summary-desk" aria-label="학급 요약">
     <div class="summary-card">
       <div class="summary-icon">👥</div>
-      <div class="summary-num" id="s-total">0</div>
+      <div class="summary-num" data-summary-field="total">0</div>
       <div class="summary-lbl">전체 학생</div>
     </div>
     <div class="summary-card">
       <div class="summary-icon">✅</div>
-      <div class="summary-num" id="s-checked">0</div>
+      <div class="summary-num" data-summary-field="checked">0</div>
       <div class="summary-lbl">오늘 기록</div>
     </div>
     <div class="summary-card alert-card">
       <div class="summary-icon">⚠️</div>
-      <div class="summary-num" id="s-alert">0</div>
+      <div class="summary-num" data-summary-field="alert">0</div>
       <div class="summary-lbl">관심 필요</div>
     </div>
     <div class="summary-card">
       <div class="summary-icon">😊</div>
-      <div class="summary-num" id="s-top-emo">-</div>
+      <div class="summary-num" data-summary-field="top-emo">-</div>
       <div class="summary-lbl">오늘 최다 감정</div>
     </div>
   </section>
 
-  <!-- 메인 콘텐츠: 학생 목록 + 상세 패널 -->
-  <main class="main-content">
+  <div class="teacher-panels">
 
-    <!-- 왼쪽: 학생 목록 -->
-    <section class="student-list-section">
-      <div class="section-header">
-        <h2 class="section-title">학생 목록</h2>
-        <select class="filter-select" id="filter-emo" onchange="filterStudents(this.value)">
-          <option value="all">전체</option>
-          <option value="😊">😊 기분 좋음</option>
-          <option value="😐">😐 보통</option>
-          <option value="😢">😢 슬픔</option>
-          <option value="😡">😡 화남</option>
-          <option value="😴">😴 피곤함</option>
-          <option value="none">미기록</option>
-        </select>
-      </div>
-      <div class="student-list" id="student-list"></div>
-    </section>
+    <div class="teacher-panel is-active" data-teacher-panel="individual" id="teacher-panel-individual">
+      <main class="main-content">
+        <section class="student-list-section">
+          <div class="section-header">
+            <h2 class="section-title">학생 목록</h2>
+            <select class="filter-select" id="filter-emo" onchange="filterStudents(this.value)">
+              <option value="all">전체</option>
+              <option value="😊">😊 기분 좋음</option>
+              <option value="😐">😐 보통</option>
+              <option value="😢">😢 슬픔</option>
+              <option value="😡">😡 화남</option>
+              <option value="😴">😴 피곤함</option>
+              <option value="none">미기록</option>
+            </select>
+          </div>
+          <p class="teacher-student-list-hint">학생 줄을 누르면 상세·기록이 열려요 (모바일은 아래에서 시트로)</p>
+          <div class="student-list" id="student-list"></div>
+        </section>
 
-    <!-- 오른쪽: 학생 상세 패널 -->
-    <section class="detail-panel" id="detail-panel">
-      <div class="detail-empty" id="detail-empty">
-        <p>👈 학생을 클릭하면<br>상세 정보가 나와요</p>
-      </div>
-      <div class="detail-content" id="detail-content" style="display:none;">
-        <div class="detail-header">
-          <div class="detail-avatar" id="d-avatar">😊</div>
-          <div>
-            <h3 class="detail-name" id="d-name">-</h3>
-            <p class="detail-meta" id="d-meta">-</p>
+        <section class="detail-panel" id="detail-panel">
+          <div class="detail-empty" id="detail-empty">
+            <p>👈 학생을 클릭하면<br>상세 정보가 나와요</p>
+          </div>
+          <div class="detail-content" id="detail-content" style="display:none;">
+            <button type="button" class="detail-back-to-list" id="btn-back-to-student-list" aria-label="학생 목록으로 돌아가기">← 학생 목록</button>
+            <div class="detail-header">
+              <div class="detail-avatar" id="d-avatar">😊</div>
+              <div>
+                <h3 class="detail-name" id="d-name">-</h3>
+                <p class="detail-meta" id="d-meta">-</p>
+              </div>
+            </div>
+            <button type="button" class="insight-btn" id="btn-open-insight">📈 감정 그래프·달력 보기</button>
+            <div class="detail-today">
+              <p class="detail-section-lbl">오늘 감정</p>
+              <div class="today-badge" id="d-today-badge">
+                <span id="d-today-emo">-</span>
+                <span id="d-today-label">-</span>
+              </div>
+              <p class="detail-note" id="d-today-note"></p>
+            </div>
+            <div class="detail-week">
+              <p class="detail-section-lbl">이번 주 감정</p>
+              <div class="week-emo-row" id="d-week-row"></div>
+            </div>
+            <div class="detail-history">
+              <p class="detail-section-lbl">최근 기록</p>
+              <div id="d-history-list"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="teacher-panel" data-teacher-panel="group" id="teacher-panel-group">
+      <div class="teacher-group-inner">
+        <section class="summary-section teacher-summary-mobile" aria-label="학급 요약">
+          <div class="summary-card">
+            <div class="summary-icon">👥</div>
+            <div class="summary-num" data-summary-field="total">0</div>
+            <div class="summary-lbl">전체 학생</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-icon">✅</div>
+            <div class="summary-num" data-summary-field="checked">0</div>
+            <div class="summary-lbl">오늘 기록</div>
+          </div>
+          <div class="summary-card alert-card">
+            <div class="summary-icon">⚠️</div>
+            <div class="summary-num" data-summary-field="alert">0</div>
+            <div class="summary-lbl">관심 필요</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-icon">😊</div>
+            <div class="summary-num" data-summary-field="top-emo">-</div>
+            <div class="summary-lbl">오늘 최다 감정</div>
+          </div>
+        </section>
+        <div class="teacher-group-block broadcast-in-detail" id="teacher-broadcast-wrap" aria-label="학생 앱 연동 메시지">
+          <p class="broadcast-hint">같은 브라우저의 학생 앱(다른 창·탭) 홈에 아래 메시지가 반영돼요.</p>
+          <div class="broadcast-row">
+            <input type="text" id="teacher-broadcast-input" class="broadcast-input" maxlength="200" placeholder="예: 오늘도 잘했어요!">
+            <button type="button" class="broadcast-btn" id="teacher-broadcast-send">보내기</button>
+            <button type="button" class="broadcast-btn ghost" id="teacher-broadcast-clear">메시지 지우기</button>
           </div>
         </div>
-        <button type="button" class="detail-edit-open-btn" id="btn-toggle-student-edit" aria-expanded="false">학생정보수정</button>
-        <div class="detail-edit-section" id="detail-edit-section" style="display:none;">
-          <p class="detail-section-lbl">학생 정보 수정</p>
-          <p class="detail-edit-hint">저장하면 이 브라우저 명단·학생 앱에 같이 반영돼요.</p>
-          <label class="detail-edit-label" for="d-edit-name">이름</label>
-          <input type="text" class="detail-edit-input" id="d-edit-name" maxlength="30">
-          <label class="detail-edit-label" for="d-edit-grade">학년</label>
-          <input type="text" class="detail-edit-input" id="d-edit-grade" maxlength="40">
-          <label class="detail-edit-label" for="d-edit-class">반</label>
-          <input type="text" class="detail-edit-input" id="d-edit-class" maxlength="20">
-          <label class="detail-edit-label" for="d-edit-number">번호(학번)</label>
-          <input type="text" class="detail-edit-input" id="d-edit-number" maxlength="20">
-          <button type="button" class="detail-save-btn" id="btn-save-student-profile">저장</button>
+        <p class="teacher-group-grid-hint">카드를 누르면 개별보기로 이동해요.</p>
+        <div class="teacher-group-grid" id="teacher-group-grid"></div>
+      </div>
+    </div>
+
+    <div class="teacher-panel" data-teacher-panel="manage" id="teacher-panel-manage">
+      <div class="teacher-manage-inner">
+        <h2 class="teacher-manage-title">학생 추가·관리</h2>
+        <p class="teacher-manage-hint">교사가 추가한 학생은 이 브라우저에만 저장돼요. JSON 명단 학생은 수정하거나 대시보드에서 숨길 수 있어요.</p>
+        <div class="teacher-manage-card">
+          <form id="teacher-roster-form" class="teacher-roster-form" autocomplete="off">
+            <label class="teacher-roster-label" for="teacher-roster-userid">학생 아이디 <span class="teacher-roster-opt">(선택, 로그인 연동 시)</span></label>
+            <input class="teacher-roster-input" id="teacher-roster-userid" maxlength="30" placeholder="영문 소문자·숫자 3~30자" autocomplete="off">
+            <label class="teacher-roster-label" for="teacher-roster-name">이름 <span class="teacher-roster-req">*</span></label>
+            <input class="teacher-roster-input" id="teacher-roster-name" maxlength="30" required placeholder="이름">
+            <label class="teacher-roster-label" for="teacher-roster-number">학번·번호</label>
+            <input class="teacher-roster-input" id="teacher-roster-number" maxlength="20" placeholder="예: 15">
+            <label class="teacher-roster-label" for="teacher-roster-grade">학년</label>
+            <input class="teacher-roster-input" id="teacher-roster-grade" maxlength="40" placeholder="예: 고등학교 2학년">
+            <label class="teacher-roster-label" for="teacher-roster-class">반</label>
+            <input class="teacher-roster-input" id="teacher-roster-class" maxlength="20" placeholder="예: 3반">
+            <div class="teacher-roster-actions">
+              <button type="submit" class="broadcast-btn" id="teacher-roster-submit">학생 추가</button>
+              <button type="button" class="broadcast-btn ghost" id="teacher-roster-cancel-edit">취소</button>
+            </div>
+          </form>
         </div>
-        <button type="button" class="insight-btn" id="btn-open-insight">📈 감정 그래프·달력 보기</button>
-        <div class="detail-today">
-          <p class="detail-section-lbl">오늘 감정</p>
-          <div class="today-badge" id="d-today-badge">
-            <span id="d-today-emo">-</span>
-            <span id="d-today-label">-</span>
+        <h3 class="teacher-manage-subtitle">현재 명단</h3>
+        <div class="teacher-manage-list" id="teacher-manage-list"></div>
+      </div>
+    </div>
+
+    <div class="teacher-panel" data-teacher-panel="settings" id="teacher-panel-settings">
+      <div class="teacher-settings-inner">
+        <h2 class="teacher-settings-title">설정</h2>
+        <div class="teacher-settings-card">
+          <p class="teacher-settings-row-title">화면 모드</p>
+          <p class="teacher-settings-sub">다크 모드를 끄면 밝은 테마로 바뀌어요.</p>
+          <div class="teacher-settings-toggle-row">
+            <span class="teacher-settings-toggle-lbl">다크 모드</span>
+            <div class="toggle on" id="teacher-settings-dark-toggle" role="switch" aria-checked="true" aria-label="다크 모드"></div>
           </div>
-          <p class="detail-note" id="d-today-note"></p>
         </div>
-        <div class="detail-week">
-          <p class="detail-section-lbl">이번 주 감정</p>
-          <div class="week-emo-row" id="d-week-row"></div>
+        <div class="teacher-settings-card">
+          <p class="teacher-settings-row-title">계정</p>
+          <button type="button" class="broadcast-btn ghost teacher-settings-fullbtn" id="teacher-settings-logout">로그아웃</button>
         </div>
-        <div class="detail-history">
-          <p class="detail-section-lbl">최근 기록</p>
-          <div id="d-history-list"></div>
+        <div class="teacher-settings-card">
+          <p class="teacher-settings-row-title">앱</p>
+          <a href="index.html" target="_blank" rel="noopener noreferrer" class="back-btn teacher-settings-fullbtn">학생 앱 열기 ↗</a>
+          <p class="teacher-settings-sub teacher-settings-version">버전 1.0.0</p>
         </div>
       </div>
-    </section>
+    </div>
 
-  </main>
+  </div><!-- /.teacher-panels -->
+
+  <nav class="teacher-mobile-tabbar" aria-label="교사 메뉴 (모바일)">
+    <button type="button" class="teacher-mtab is-active" data-teacher-tab="individual" id="teacher-mtab-individual">
+      <span class="teacher-mtab-ico" aria-hidden="true">👤</span>
+      <span class="teacher-mtab-lbl">개별</span>
+    </button>
+    <button type="button" class="teacher-mtab" data-teacher-tab="group" id="teacher-mtab-group">
+      <span class="teacher-mtab-ico" aria-hidden="true">👥</span>
+      <span class="teacher-mtab-lbl">단체</span>
+    </button>
+    <button type="button" class="teacher-mtab" data-teacher-tab="manage" id="teacher-mtab-manage">
+      <span class="teacher-mtab-ico" aria-hidden="true">📋</span>
+      <span class="teacher-mtab-lbl">학생관리</span>
+    </button>
+    <button type="button" class="teacher-mtab" data-teacher-tab="settings" id="teacher-mtab-settings">
+      <span class="teacher-mtab-ico" aria-hidden="true">⚙️</span>
+      <span class="teacher-mtab-lbl">설정</span>
+    </button>
+  </nav>
+
+  </div><!-- /.teacher-app-layout -->
+
+  <button type="button" class="detail-mobile-backdrop" id="detail-mobile-backdrop" aria-label="상세 닫기" tabindex="-1"></button>
 
   <div id="insight-overlay" class="insight-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="insight-title" onclick="closeInsightModal()">
     <div class="insight-modal" id="insight-modal-box" onclick="event.stopPropagation()">
@@ -197,10 +304,12 @@
 
   </div><!-- /teacher-app-shell -->
 
-  <!-- 학생 앱 연동: teacher-data.js → DATA_MODE = 'hybrid'(기본) | 'local' | 'mock' / 반 명단: data/students.json -->
+  <script src="js/core/paths.js"></script>
   <script src="js/core/storage.js"></script>
   <script src="js/teacher/teacher-data.js"></script>
+  <script src="js/teacher/teacher-theme.js"></script>
   <script src="js/teacher/teacher-app.js"></script>
+  <script src="js/teacher/teacher-roster.js"></script>
   <script src="js/teacher/teacher-auth.js"></script>
 </body>
 </html>

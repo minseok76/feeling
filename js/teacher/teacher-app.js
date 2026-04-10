@@ -17,18 +17,24 @@ async function initTeacherDashboard() {
   if (teacherDashboardBooted) return;
   teacherDashboardBooted = true;
 
-  // 오늘 날짜 표시
+  if (typeof initTeacherTheme === 'function') initTeacherTheme();
+  if (typeof initTeacherRosterPanel === 'function') initTeacherRosterPanel();
+
   const d = new Date();
   document.getElementById('today-date').textContent =
     `${d.getMonth() + 1}월 ${d.getDate()}일 (${DAY_KR[d.getDay()]})`;
 
-  // 데이터 불러오기
   allStudents = await fetchAllStudents();
 
   renderSummary();
   renderStudentList(allStudents);
+  renderTeacherGroupGrid();
+  if (typeof renderTeacherManageList === 'function') {
+    renderTeacherManageList(allStudents);
+  }
 
   setupTeacherSync();
+  wireTeacherTabNavigation();
 
   const sendBtn = document.getElementById('teacher-broadcast-send');
   const clearBtn = document.getElementById('teacher-broadcast-clear');
@@ -61,30 +67,52 @@ async function initTeacherDashboard() {
   if (calPrev) calPrev.addEventListener('click', insightCalPrevMonth);
   if (calNext) calNext.addEventListener('click', insightCalNextMonth);
 
-  const saveProfileBtn = document.getElementById('btn-save-student-profile');
-  if (saveProfileBtn) {
-    saveProfileBtn.addEventListener('click', function () {
-      void saveDetailStudentProfile();
+  const btnBackList = document.getElementById('btn-back-to-student-list');
+  if (btnBackList) {
+    btnBackList.addEventListener('click', function () {
+      closeTeacherMobileDetailSheet();
     });
   }
 
-  const toggleStudentEdit = document.getElementById('btn-toggle-student-edit');
-  if (toggleStudentEdit) {
-    toggleStudentEdit.addEventListener('click', function () {
-      const sec = document.getElementById('detail-edit-section');
-      const open = sec && sec.style.display !== 'none';
-      setDetailEditSectionOpen(!open);
+  const mobileBackdrop = document.getElementById('detail-mobile-backdrop');
+  if (mobileBackdrop) {
+    mobileBackdrop.addEventListener('click', function () {
+      closeTeacherMobileDetailSheet();
     });
   }
+
+  const logoutBtn = document.getElementById('teacher-settings-logout');
+  if (logoutBtn && typeof window.teacherSignOut === 'function') {
+    logoutBtn.addEventListener('click', function () {
+      window.teacherSignOut();
+    });
+  }
+
+  window.addEventListener('resize', function () {
+    if (!window.matchMedia('(max-width: 900px)').matches) {
+      const panel = document.getElementById('detail-panel');
+      const bd = document.getElementById('detail-mobile-backdrop');
+      if (panel) panel.classList.remove('detail-panel--sheet-open');
+      if (bd) bd.classList.remove('is-visible');
+      syncTeacherBodyScrollLock();
+    } else {
+      const contentEl = document.getElementById('detail-content');
+      if (
+        selectedStudentId != null &&
+        contentEl &&
+        contentEl.style.display !== 'none'
+      ) {
+        openTeacherMobileDetailSheet();
+      }
+      syncTeacherBodyScrollLock();
+    }
+  });
 
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
     const ov = document.getElementById('insight-overlay');
     if (ov && ov.style.display === 'flex') closeInsightModal();
-    else {
-      const sec = document.getElementById('detail-edit-section');
-      if (sec && sec.style.display !== 'none') setDetailEditSectionOpen(false);
-    }
+    else if (isTeacherMobileDetailSheetOpen()) closeTeacherMobileDetailSheet();
   });
 }
 
@@ -104,7 +132,9 @@ function setupTeacherSync() {
       e.key === 'emotion-checkin-accounts' ||
       e.key === 'emotion-checkin-student-number' ||
       e.key === 'emotion-checkin-grade-label' ||
-      e.key === 'emotion-checkin-class-label'
+      e.key === 'emotion-checkin-class-label' ||
+      e.key === 'emotion-checkin-teacher-custom-roster' ||
+      e.key === 'emotion-checkin-teacher-hidden-json-ids'
     ) {
       void refreshDashboard();
     }
@@ -122,6 +152,10 @@ function setupTeacherSync() {
 async function refreshDashboard() {
   allStudents = await fetchAllStudents();
   renderSummary();
+  renderTeacherGroupGrid();
+  if (typeof renderTeacherManageList === 'function') {
+    renderTeacherManageList(allStudents);
+  }
   const filterEl = document.getElementById('filter-emo');
   const val = filterEl ? filterEl.value : 'all';
   filterStudents(val);
@@ -135,9 +169,7 @@ async function refreshDashboard() {
     document.getElementById('detail-content').style.display = 'block';
     renderDetailPanel(student);
   } else {
-    selectedStudentId = null;
-    document.getElementById('detail-empty').style.display = 'flex';
-    document.getElementById('detail-content').style.display = 'none';
+    closeTeacherMobileDetailSheet();
   }
 
   if (insightOpenForId != null) {
@@ -167,21 +199,107 @@ function renderSummary() {
   const checked = allStudents.filter(s => hasTodayRecord(s)).length;
   const alerts = allStudents.filter(s => isAlertStudent(s)).length;
 
-  // 오늘 최다 감정
   const todayEmos = allStudents
     .filter(s => hasTodayRecord(s))
     .map(s => s.emotions[0].emo);
   const topEmo = getTopItem(todayEmos) || '-';
 
-  document.getElementById('s-total').textContent = total;
-  document.getElementById('s-checked').textContent = checked;
-  document.getElementById('s-alert').textContent = alerts;
-  document.getElementById('s-top-emo').textContent = topEmo;
+  document.querySelectorAll('[data-summary-field="total"]').forEach(function (el) {
+    el.textContent = total;
+  });
+  document.querySelectorAll('[data-summary-field="checked"]').forEach(function (el) {
+    el.textContent = checked;
+  });
+  document.querySelectorAll('[data-summary-field="alert"]').forEach(function (el) {
+    el.textContent = alerts;
+  });
+  document.querySelectorAll('[data-summary-field="top-emo"]').forEach(function (el) {
+    el.textContent = topEmo;
+  });
+}
+
+let teacherActiveView = 'individual';
+
+function showTeacherView(view) {
+  const v = view || 'individual';
+  teacherActiveView = v;
+
+  document.querySelectorAll('[data-teacher-tab]').forEach(function (btn) {
+    const on = btn.getAttribute('data-teacher-tab') === v;
+    btn.classList.toggle('is-active', on);
+  });
+
+  document.querySelectorAll('[data-teacher-panel]').forEach(function (panel) {
+    const on = panel.getAttribute('data-teacher-panel') === v;
+    panel.classList.toggle('is-active', on);
+  });
+
+  const layout = document.querySelector('.teacher-app-layout');
+  if (layout) layout.setAttribute('data-active-view', v);
+
+  if (v === 'group') renderTeacherGroupGrid();
+
+  if (window.matchMedia('(max-width: 900px)').matches && v !== 'individual') {
+    closeTeacherMobileDetailSheet();
+  }
+}
+
+function wireTeacherTabNavigation() {
+  document.querySelectorAll('[data-teacher-tab]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const v = btn.getAttribute('data-teacher-tab');
+      if (v) showTeacherView(v);
+    });
+  });
+  showTeacherView('individual');
+}
+
+function renderTeacherGroupGrid() {
+  const grid = document.getElementById('teacher-group-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  if (!allStudents || allStudents.length === 0) {
+    grid.innerHTML =
+      '<p class="teacher-group-empty">학생이 없어요. 학생관리에서 추가하거나 명단을 확인하세요.</p>';
+    return;
+  }
+
+  allStudents.forEach(function (s) {
+    const hasToday = hasTodayRecord(s);
+    const emo = hasToday ? s.emotions[0].emo : '❓';
+    const label = hasToday ? s.emotions[0].label : '미기록';
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'teacher-group-card' + (isAlertStudent(s) ? ' teacher-group-card--alert' : '');
+    card.innerHTML = `
+      <span class="teacher-group-card-emo">${emo}</span>
+      <span class="teacher-group-card-name">${escTeacherListText(s.name)}</span>
+      <span class="teacher-group-card-sub">${escTeacherListText(label)}</span>
+    `;
+    const sid = s.id;
+    card.addEventListener('click', function () {
+      showTeacherView('individual');
+      let listed = null;
+      document.querySelectorAll('.student-card[data-student-id]').forEach(function (c) {
+        if (c.getAttribute('data-student-id') === String(sid)) listed = c;
+      });
+      selectStudent(sid, listed);
+    });
+    grid.appendChild(card);
+  });
 }
 
 // =====================
 // 학생 목록 렌더링
 // =====================
+function escTeacherListText(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/"/g, '&quot;');
+}
+
 function renderStudentList(students) {
   const container = document.getElementById('student-list');
   container.innerHTML = '';
@@ -191,6 +309,8 @@ function renderStudentList(students) {
     return;
   }
 
+  const mobile = window.matchMedia('(max-width: 900px)').matches;
+
   students.forEach(student => {
     const hasToday = hasTodayRecord(student);
     const todayEmo = hasToday ? student.emotions[0].emo : '❓';
@@ -199,16 +319,45 @@ function renderStudentList(students) {
     const isActive = student.id === selectedStudentId;
 
     const card = document.createElement('div');
-    card.className = `student-card${!hasToday ? ' no-record' : ''}${isActive ? ' active' : ''}`;
-    card.onclick = () => selectStudent(student.id, card);
-    card.innerHTML = `
-      <div class="s-emo">${todayEmo}</div>
-      <div class="s-info">
-        <p class="s-name">${student.name} <span style="color:#555;font-weight:400;font-size:12px;">${student.number}</span></p>
-        <p class="s-sub">${todayLabel}</p>
-      </div>
-      ${isAlert ? '<span class="s-alert" title="관심 필요">🔴</span>' : ''}
-    `;
+
+    card.dataset.studentId = String(student.id);
+
+    if (mobile) {
+      card.className = `student-card${!hasToday ? ' no-record' : ''}${isActive ? ' active' : ''}`;
+      card.setAttribute('role', 'button');
+      card.setAttribute('tabindex', '0');
+      card.innerHTML = `
+        <div class="s-info">
+          <div class="s-name-row">
+            <span class="s-name-text">${escTeacherListText(student.name)}</span>
+            <span class="s-num">${escTeacherListText(String(student.number || ''))}</span>
+            ${isAlert ? '<span class="s-alert" title="관심 필요">🔴</span>' : ''}
+          </div>
+        </div>
+      `;
+      card.onclick = function () {
+        selectStudent(student.id, card);
+      };
+      card.onkeydown = function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          selectStudent(student.id, card);
+        }
+      };
+    } else {
+      card.className = `student-card${!hasToday ? ' no-record' : ''}${isActive ? ' active' : ''}`;
+      card.onclick = function () {
+        selectStudent(student.id, card);
+      };
+      card.innerHTML = `
+        <div class="s-emo">${todayEmo}</div>
+        <div class="s-info">
+          <p class="s-name">${escTeacherListText(student.name)} <span style="color:#555;font-weight:400;font-size:12px;">${escTeacherListText(String(student.number || ''))}</span></p>
+          <p class="s-sub">${escTeacherListText(todayLabel)}</p>
+        </div>
+        ${isAlert ? '<span class="s-alert" title="관심 필요">🔴</span>' : ''}
+      `;
+    }
     container.appendChild(card);
   });
 }
@@ -233,36 +382,90 @@ function filterStudents(value) {
 }
 
 // =====================
-// 학생 정보 수정 패널 (버튼으로 열기)
+// 학생 클릭 → 상세 패널
 // =====================
-function setDetailEditSectionOpen(open) {
-  const sec = document.getElementById('detail-edit-section');
-  const btn = document.getElementById('btn-toggle-student-edit');
-  if (sec) sec.style.display = open ? 'block' : 'none';
-  if (btn) {
-    btn.textContent = open ? '수정 닫기' : '학생정보수정';
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+function isTeacherMobileDetailSheetOpen() {
+  const panel = document.getElementById('detail-panel');
+  return (
+    window.matchMedia('(max-width: 900px)').matches &&
+    panel &&
+    panel.classList.contains('detail-panel--sheet-open')
+  );
+}
+
+function syncTeacherBodyScrollLock() {
+  const ins = document.getElementById('insight-overlay');
+  const insightOpen = ins && ins.style.display === 'flex';
+  const sheetOpen = isTeacherMobileDetailSheetOpen();
+  if (insightOpen || sheetOpen) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
   }
 }
 
-// =====================
-// 학생 클릭 → 상세 패널
-// =====================
+function openTeacherMobileDetailSheet() {
+  if (!window.matchMedia('(max-width: 900px)').matches) return;
+  const bd = document.getElementById('detail-mobile-backdrop');
+  const panel = document.getElementById('detail-panel');
+  if (bd) bd.classList.add('is-visible');
+  if (panel) {
+    panel.classList.add('detail-panel--sheet-open');
+    requestAnimationFrame(function () {
+      panel.scrollTop = 0;
+    });
+  }
+  syncTeacherBodyScrollLock();
+}
+
+function closeTeacherMobileDetailSheet() {
+  selectedStudentId = null;
+  document.querySelectorAll('.student-card').forEach(function (c) {
+    c.classList.remove('active');
+  });
+  const emptyEl = document.getElementById('detail-empty');
+  const contentEl = document.getElementById('detail-content');
+  if (emptyEl) emptyEl.style.display = 'flex';
+  if (contentEl) contentEl.style.display = 'none';
+  const bd = document.getElementById('detail-mobile-backdrop');
+  const panel = document.getElementById('detail-panel');
+  if (bd) bd.classList.remove('is-visible');
+  if (panel) panel.classList.remove('detail-panel--sheet-open');
+  syncTeacherBodyScrollLock();
+}
+
 function selectStudent(studentId, cardEl) {
-  setDetailEditSectionOpen(false);
   selectedStudentId = studentId;
   const student = allStudents.find(s => s.id === studentId);
   if (!student) return;
 
-  // 목록에서 active 표시 업데이트
   document.querySelectorAll('.student-card').forEach(c => c.classList.remove('active'));
-  if (cardEl) cardEl.classList.add('active');
+  if (cardEl) {
+    cardEl.classList.add('active');
+  } else {
+    document.querySelectorAll('.student-card[data-student-id]').forEach(function (c) {
+      if (c.getAttribute('data-student-id') === String(studentId)) {
+        c.classList.add('active');
+      }
+    });
+  }
 
   // 상세 패널 보이기
   document.getElementById('detail-empty').style.display = 'none';
   document.getElementById('detail-content').style.display = 'block';
 
   renderDetailPanel(student);
+
+  if (window.matchMedia('(max-width: 900px)').matches) {
+    openTeacherMobileDetailSheet();
+  } else {
+    const panel = document.getElementById('detail-panel');
+    if (panel) {
+      requestAnimationFrame(function () {
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+  }
 }
 
 // =====================
@@ -272,32 +475,26 @@ function renderDetailPanel(student) {
   const hasToday = hasTodayRecord(student);
   const isAlert = isAlertStudent(student);
 
-  // 헤더
+  const emos = student.emotions || [];
   document.getElementById('d-avatar').textContent =
-    hasToday ? student.emotions[0].emo : '❓';
+    hasToday ? emos[0].emo : '❓';
   document.getElementById('d-name').textContent =
     student.name + (isAlert ? ' 🔴' : '');
   const metaParts = [];
   if (student.gradeLabel) metaParts.push(student.gradeLabel);
   if (student.classLabel) metaParts.push(student.classLabel);
   const metaSchool = metaParts.join(' · ');
-  const metaTail = `${student.number} · 총 ${student.emotions.length}회 기록`;
+  const uid = (student.userId || '').trim();
+  const uidPart = uid ? ` · ID ${uid}` : '';
+  const emoCount = (student.emotions && student.emotions.length) || 0;
+  const metaTail = `${student.number || '-'}${uidPart} · 총 ${emoCount}회 기록`;
   document.getElementById('d-meta').textContent = metaSchool
     ? `${metaSchool} · ${metaTail}`
     : metaTail;
 
-  const nEl = document.getElementById('d-edit-name');
-  const gEl = document.getElementById('d-edit-grade');
-  const cEl = document.getElementById('d-edit-class');
-  const numEl = document.getElementById('d-edit-number');
-  if (nEl) nEl.value = (student.name || '').trim();
-  if (gEl) gEl.value = (student.gradeLabel || '').trim();
-  if (cEl) cEl.value = (student.classLabel || '').trim();
-  if (numEl) numEl.value = (student.number || '').trim();
-
   // 오늘 감정
   if (hasToday) {
-    const t = student.emotions[0];
+    const t = emos[0];
     document.getElementById('d-today-emo').textContent = t.emo;
     document.getElementById('d-today-label').textContent = t.label;
     document.getElementById('d-today-note').textContent =
@@ -315,7 +512,7 @@ function renderDetailPanel(student) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const dayStr = d.toDateString();
-    const found = student.emotions.find(e =>
+    const found = (student.emotions || []).find(e =>
       new Date(e.date).toDateString() === dayStr
     );
     const item = document.createElement('div');
@@ -330,7 +527,7 @@ function renderDetailPanel(student) {
   // 최근 기록 목록
   const histList = document.getElementById('d-history-list');
   histList.innerHTML = '';
-  const recent = student.emotions.slice(0, 5);
+  const recent = (student.emotions || []).slice(0, 5);
 
   if (recent.length === 0) {
     histList.innerHTML = '<p style="color:#555;font-size:13px;padding:10px 0;">기록이 없어요</p>';
@@ -350,68 +547,6 @@ function renderDetailPanel(student) {
     `;
     histList.appendChild(div);
   });
-}
-
-function normalizeDetailLoginId(uid) {
-  return String(uid || '').trim().toLowerCase();
-}
-
-async function saveDetailStudentProfile() {
-  const student = allStudents.find(s => s.id === selectedStudentId);
-  if (!student) return;
-
-  const name = (document.getElementById('d-edit-name') || {}).value || '';
-  const gradeLabel = (document.getElementById('d-edit-grade') || {}).value || '';
-  const classLabel = (document.getElementById('d-edit-class') || {}).value || '';
-  const number = (document.getElementById('d-edit-number') || {}).value || '';
-  const nameTrim = name.trim();
-  if (!nameTrim) {
-    alert('이름을 입력해 주세요.');
-    return;
-  }
-
-  if (typeof mergeRosterStudentProfile === 'function') {
-    mergeRosterStudentProfile(student.id, {
-      name: nameTrim,
-      gradeLabel: gradeLabel.trim(),
-      classLabel: classLabel.trim(),
-      number: number.trim(),
-    });
-  }
-
-  const loginId = normalizeDetailLoginId(student.userId);
-  if (loginId && typeof patchLocalAccount === 'function') {
-    patchLocalAccount(loginId, {
-      name: nameTrim,
-      studentNumber: number.trim(),
-      gradeLabel: gradeLabel.trim(),
-      classLabel: classLabel.trim(),
-    });
-  }
-
-  const logged = normalizeDetailLoginId(
-    typeof localStorage !== 'undefined'
-      ? localStorage.getItem('emotion-checkin-logged-user')
-      : ''
-  );
-  if (logged && loginId && logged === loginId) {
-    localStorage.setItem('emotion-checkin-user-name', nameTrim || '학생');
-    localStorage.setItem('emotion-checkin-student-number', number.trim());
-    localStorage.setItem('emotion-checkin-grade-label', gradeLabel.trim());
-    localStorage.setItem('emotion-checkin-class-label', classLabel.trim());
-  }
-
-  const btn = document.getElementById('btn-save-student-profile');
-  const prev = btn ? btn.textContent : '';
-  if (btn) {
-    btn.textContent = '저장됨';
-    btn.disabled = true;
-  }
-  await refreshDashboard();
-  if (btn) {
-    btn.textContent = prev || '저장';
-    btn.disabled = false;
-  }
 }
 
 // =====================
@@ -500,7 +635,7 @@ function openInsightModal(student) {
 
   const overlay = document.getElementById('insight-overlay');
   if (overlay) overlay.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
+  syncTeacherBodyScrollLock();
 
   renderInsightGraph();
   renderInsightCalendar();
@@ -510,9 +645,9 @@ function openInsightModal(student) {
 function closeInsightModal() {
   const overlay = document.getElementById('insight-overlay');
   if (overlay) overlay.style.display = 'none';
-  document.body.style.overflow = '';
   insightOpenForId = null;
   insightSelectedDayStr = null;
+  syncTeacherBodyScrollLock();
 }
 
 window.closeInsightModal = closeInsightModal;

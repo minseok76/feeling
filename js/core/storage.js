@@ -200,8 +200,13 @@ function applyRosterProfilesToStudents(students) {
   return students.map(s => {
     const ov = byId[String(s.id)];
     if (!ov) return { ...s };
+    const uid =
+      ov.userId !== undefined && String(ov.userId).trim() !== ''
+        ? String(ov.userId).trim().toLowerCase()
+        : s.userId;
     return {
       ...s,
+      userId: uid,
       name: ov.name !== undefined && ov.name !== '' ? ov.name : s.name,
       number: ov.number !== undefined && ov.number !== '' ? ov.number : s.number,
       gradeLabel:
@@ -233,4 +238,107 @@ function getTeacherAccounts() {
 
 function setTeacherAccounts(obj) {
   localStorage.setItem(LS_TEACHER_ACCOUNTS_KEY, JSON.stringify(obj));
+}
+
+// =====================
+// 교사 명단 오버레이 (JSON 행 숨김 + 교사가 추가한 학생)
+// =====================
+
+const LS_TEACHER_HIDDEN_JSON_IDS = 'emotion-checkin-teacher-hidden-json-ids';
+const LS_TEACHER_CUSTOM_ROSTER = 'emotion-checkin-teacher-custom-roster';
+
+function getTeacherHiddenJsonIds() {
+  try {
+    const r = localStorage.getItem(LS_TEACHER_HIDDEN_JSON_IDS);
+    const a = r ? JSON.parse(r) : [];
+    if (!Array.isArray(a)) return [];
+    return a
+      .map(n => Number(n))
+      .filter(n => !Number.isNaN(n) && n > 0);
+  } catch (e) {
+    return [];
+  }
+}
+
+function setTeacherHiddenJsonIds(ids) {
+  const uniq = [...new Set((ids || []).map(n => Number(n)).filter(n => !Number.isNaN(n) && n > 0))];
+  localStorage.setItem(LS_TEACHER_HIDDEN_JSON_IDS, JSON.stringify(uniq));
+  notifyEmotionAppSync('teacher-roster');
+}
+
+function hideTeacherJsonStudent(numericId) {
+  const n = Number(numericId);
+  if (Number.isNaN(n) || n <= 0) return;
+  const set = new Set(getTeacherHiddenJsonIds());
+  set.add(n);
+  setTeacherHiddenJsonIds([...set]);
+}
+
+function unhideTeacherJsonStudent(numericId) {
+  const n = Number(numericId);
+  const next = getTeacherHiddenJsonIds().filter(id => id !== n);
+  setTeacherHiddenJsonIds(next);
+}
+
+function getTeacherCustomRoster() {
+  try {
+    const r = localStorage.getItem(LS_TEACHER_CUSTOM_ROSTER);
+    const a = r ? JSON.parse(r) : [];
+    return Array.isArray(a) ? a : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function setTeacherCustomRoster(rows) {
+  localStorage.setItem(LS_TEACHER_CUSTOM_ROSTER, JSON.stringify(rows || []));
+  notifyEmotionAppSync('teacher-roster');
+}
+
+function addTeacherCustomRosterRow(fields) {
+  const uid = String((fields && fields.userId) || '')
+    .trim()
+    .toLowerCase();
+  const name = String((fields && fields.name) || '').trim();
+  if (!name) return { ok: false, error: '이름을 입력해 주세요.' };
+  if (uid && !/^[a-z0-9._-]{3,30}$/.test(uid)) {
+    return { ok: false, error: '학생 아이디는 영문 소문자·숫자·._- 만 3~30자예요.' };
+  }
+  const list = getTeacherCustomRoster();
+  const id = 'tc-' + Date.now();
+  list.push({
+    id,
+    userId: uid || '',
+    name,
+    number: String((fields && fields.number) || '').trim(),
+    gradeLabel: String((fields && fields.gradeLabel) || '').trim(),
+    classLabel: String((fields && fields.classLabel) || '').trim(),
+  });
+  setTeacherCustomRoster(list);
+  return { ok: true, id };
+}
+
+function updateTeacherCustomRosterRow(id, patch) {
+  const list = getTeacherCustomRoster();
+  const i = list.findIndex(r => r.id === id);
+  if (i < 0) return false;
+  const row = { ...list[i], ...patch };
+  const uid = String(row.userId || '')
+    .trim()
+    .toLowerCase();
+  if (uid && !/^[a-z0-9._-]{3,30}$/.test(uid)) return false;
+  row.userId = uid;
+  row.name = String(row.name || '').trim();
+  if (!row.name) return false;
+  row.number = String(row.number || '').trim();
+  row.gradeLabel = String(row.gradeLabel || '').trim();
+  row.classLabel = String(row.classLabel || '').trim();
+  list[i] = row;
+  setTeacherCustomRoster(list);
+  return true;
+}
+
+function removeTeacherCustomRosterRow(id) {
+  const list = getTeacherCustomRoster().filter(r => r.id !== id);
+  setTeacherCustomRoster(list);
 }

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>감정 체크인</title>
+  <script>
+    (function () {
+      try {
+        if (localStorage.getItem('emotion-checkin-theme') === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/theme-light.css">
+  <link rel="stylesheet" href="css/animations.css">
+</head>
+<body class="student-app">
+
+  <div id="auth-gate" class="auth-gate" aria-label="로그인">
+    <div class="auth-card">
+      <h1 class="auth-title">감정 체크인</h1>
+      <p class="auth-lead">이름·아이디·비밀번호로 로그인하거나 회원가입하세요. 계정·감정 기록은 이 브라우저(기기)에만 저장돼요.</p>
+      <p id="auth-error-global" class="auth-msg auth-msg--error"></p>
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" id="tab-login">로그인</button>
+        <button type="button" class="auth-tab" id="tab-signup">회원가입</button>
+      </div>
+      <form id="form-login" class="auth-form" autocomplete="on">
+        <label class="auth-label" for="login-userid">아이디 <span class="auth-hint">(영문·숫자 3~30자)</span></label>
+        <input class="auth-input" id="login-userid" autocomplete="username" required>
+        <label class="auth-label" for="login-password">비밀번호</label>
+        <input class="auth-input" type="password" id="login-password" autocomplete="current-password" required>
+        <button type="submit" class="auth-submit">로그인</button>
+        <p id="auth-error-login" class="auth-msg auth-msg--error"></p>
+      </form>
+      <form id="form-signup" class="auth-form" style="display:none;" autocomplete="on">
+        <label class="auth-label" for="signup-name">이름</label>
+        <input class="auth-input" id="signup-name" maxlength="30" placeholder="홍길동" required>
+        <label class="auth-label" for="signup-student-number">학번</label>
+        <input class="auth-input" id="signup-student-number" maxlength="20" placeholder="예: 15번 또는 15" required>
+        <label class="auth-label" for="signup-grade">학년</label>
+        <input class="auth-input" id="signup-grade" maxlength="40" placeholder="예: 고등학교 2학년" required>
+        <label class="auth-label" for="signup-class">반</label>
+        <input class="auth-input" id="signup-class" maxlength="20" placeholder="예: 3반" required>
+        <label class="auth-label" for="signup-userid">아이디 <span class="auth-hint">(영문·숫자 3~30자)</span></label>
+        <input class="auth-input" id="signup-userid" maxlength="30" autocomplete="username" required>
+        <label class="auth-label" for="signup-password">비밀번호 <span class="auth-hint">(6자 이상)</span></label>
+        <input class="auth-input" type="password" id="signup-password" autocomplete="new-password" required>
+        <label class="auth-label" for="signup-password2">비밀번호 확인</label>
+        <input class="auth-input" type="password" id="signup-password2" autocomplete="new-password" required>
+        <button type="submit" class="auth-submit">회원가입</button>
+        <p id="auth-error-signup" class="auth-msg auth-msg--error"></p>
+      </form>
+    </div>
+  </div>
+
+  <div id="phone" class="phone" style="display:none;">
+    <div class="status-bar">
+      <span>9:41</span>
+      <span>●●● 🔋</span>
+    </div>
+
+    <!-- 홈 화면 -->
+    <div class="screen active" id="s-home">
+      <div class="scroll-area">
+        <div id="teacher-banner" class="teacher-banner" style="display:none;" role="status">
+          <div class="teacher-banner-inner">
+            <span class="teacher-banner-label">선생님 메시지</span>
+            <p class="teacher-banner-text" id="teacher-banner-text"></p>
+            <button type="button" class="teacher-banner-close" id="teacher-banner-close" aria-label="닫기">×</button>
+          </div>
+        </div>
+        <p class="home-display-name" id="home-display-name"></p>
+        <p class="greeting">안녕하세요! 👋</p>
+        <p class="sub">오늘 기분은 어때요?</p>
+        <div class="big-card">
+          <div class="emo-row">
+            <div class="big-emo" id="today-emo">😊</div>
+            <div class="emo-info">
+              <h2 id="today-label">기분 좋음</h2>
+              <p id="today-time">오늘 · 오후 2:30</p>
+              <span class="emo-tag">😊 Happy</span>
+            </div>
+          </div>
+        </div>
+        <p class="section-title">최근 기록</p>
+        <div id="recent-logs"></div>
+      </div>
+    </div>
+
+    <!-- 기록 화면 -->
+    <div class="screen" id="s-hist">
+      <div class="screen-header">
+        <h1>기록 목록</h1>
+        <p>모든 감정 기록을 확인하세요</p>
+      </div>
+      <div class="scroll-area">
+        <div id="history-list"></div>
+      </div>
+    </div>
+
+    <!-- 통계 화면 -->
+    <div class="screen" id="s-stat">
+      <div class="screen-header">
+        <h1>통계</h1>
+        <p>이번 주 감정 흐름</p>
+      </div>
+      <div class="scroll-area">
+        <div class="stats-row">
+          <div class="stats-mini">
+            <div class="stats-num" id="total-count">0</div>
+            <div class="stats-lbl">총 기록</div>
+          </div>
+          <div class="stats-mini">
+            <div class="stats-num" id="top-emo">-</div>
+            <div class="stats-lbl">최다 감정</div>
+          </div>
+          <div class="stats-mini">
+            <div class="stats-num" id="streak">0</div>
+            <div class="stats-lbl">연속 기록</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <p class="stat-title">주간 감정 차트</p>
+          <div class="week-bars" id="week-chart"></div>
+        </div>
+        <div class="stat-card">
+          <p class="stat-title">감정 비율</p>
+          <div id="ratio-chart"></div>
+        </div>
+        <div class="stat-card">
+          <p class="stat-title">감정 달력</p>
+          <p class="stat-cal-desc">날짜를 누르면 그날 기록과 메모를 볼 수 있어요.</p>
+          <div class="student-cal-nav">
+            <button type="button" class="student-cal-nav-btn" id="student-cal-prev" aria-label="이전 달">◀</button>
+            <span id="student-cal-label" class="student-cal-label">—</span>
+            <button type="button" class="student-cal-nav-btn" id="student-cal-next" aria-label="다음 달">▶</button>
+          </div>
+          <div class="student-cal-weekdays" aria-hidden="true">
+            <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+          </div>
+          <div id="student-calendar" class="student-cal-grid"></div>
+          <div id="student-day-detail" class="student-day-detail">
+            <p class="student-day-placeholder">날짜를 선택해 주세요</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 설정 화면 -->
+    <div class="screen" id="s-set">
+      <div class="screen-header">
+        <h1>설정</h1>
+        <p>앱 환경을 설정하세요</p>
+      </div>
+      <div class="scroll-area">
+        <div style="text-align:center;margin-bottom:20px;">
+          <div class="avatar-circle">🎓</div>
+          <p class="profile-name">학생 프로필</p>
+          <p class="profile-sub" id="profile-login-id"></p>
+          <p class="profile-sub">오늘도 화이팅!</p>
+        </div>
+        <div class="set-section set-profile-guard">
+          <p class="set-label" style="margin-bottom:4px;">이름·학번·학년·반</p>
+          <p class="set-sub" style="margin-bottom:12px;">회원가입 때 입력한 정보예요. 수정하려면 아래에 비밀번호를 입력한 뒤 <strong>확인</strong>을 눌러 주세요.</p>
+          <div class="set-row">
+            <div><p class="set-label">이름</p><p class="set-sub">교사 화면과 연동돼요</p></div>
+            <input class="name-input profile-guard-field" id="user-name" placeholder="이름 입력" disabled>
+          </div>
+          <div class="set-row">
+            <div><p class="set-label">학번</p><p class="set-sub">명단 번호와 맞추면 연동이 쉬워요</p></div>
+            <input class="name-input profile-guard-field" id="user-school-number" placeholder="예: 15번" style="width:120px;" disabled>
+          </div>
+          <div class="set-row">
+            <div><p class="set-label">학년</p></div>
+            <input class="name-input profile-guard-field" id="user-grade" placeholder="고등학교 2학년" style="width:160px;text-align:right;" disabled>
+          </div>
+          <div class="set-row">
+            <div><p class="set-label">반</p></div>
+            <input class="name-input profile-guard-field" id="user-class" placeholder="3반" style="width:100px;text-align:right;" disabled>
+          </div>
+          <div class="set-profile-unlock">
+            <label class="auth-label" for="settings-profile-password" style="margin-top:8px;">비밀번호 확인</label>
+            <div class="set-profile-unlock-row">
+              <input class="name-input" type="password" id="settings-profile-password" autocomplete="current-password" placeholder="로그인 비밀번호" maxlength="100">
+              <button type="button" class="profile-unlock-btn" id="btn-unlock-profile">확인</button>
+            </div>
+            <p id="settings-profile-unlock-error" class="auth-msg auth-msg--error" style="margin-top:8px;"></p>
+            <p id="settings-profile-unlocked-msg" class="set-sub" style="margin-top:6px;color:#a78bfa;display:none;">지금은 수정할 수 있어요. 다른 탭으로 나가면 다시 잠깁니다.</p>
+          </div>
+        </div>
+        <div class="set-section">
+          <div class="set-row">
+            <div><p class="set-label">알림</p><p class="set-sub">매일 오후 9시</p></div>
+            <div class="toggle on" id="t-notify" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="set-row">
+            <div><p class="set-label">다크 모드</p><p class="set-sub">켜면 어두운 화면, 끄면 밝은 화면이에요</p></div>
+            <div class="toggle on" id="t-dark" role="switch" aria-checked="true" aria-label="다크 모드"></div>
+          </div>
+        </div>
+        <div class="set-section">
+          <div class="set-row" onclick="signOutStudent()" style="cursor:pointer">
+            <p class="set-label set-text-muted">로그아웃</p>
+            <span class="set-text-arrow">→</span>
+          </div>
+        </div>
+        <div class="set-section">
+          <a href="teacher.html" target="_blank" rel="noopener noreferrer" class="set-row set-row-link" style="text-decoration:none;color:inherit;">
+            <p class="set-label" style="color:#a78bfa;">교사 대시보드</p>
+            <span class="set-text-arrow">↗ 새 창</span>
+          </a>
+          <p class="sync-hint">학생 창과 교사 창을 나눠 써도 됩니다. <strong>같은 브라우저</strong>(예: 둘 다 Chrome)이면 저장·메시지가 자동으로 맞춰집니다.</p>
+          <div class="set-row" onclick="clearData()" style="cursor:pointer">
+            <p class="set-label" style="color:#f472b6;">데이터 초기화</p>
+            <span class="set-text-arrow">→</span>
+          </div>
+          <div class="set-row">
+            <p class="set-label set-text-version">앱 버전</p>
+            <span class="set-text-version" style="font-size:12px;">v1.0.0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 하단 네비게이션 -->
+    <div class="nav-bar">
+      <button class="nav-btn active" id="nb-home" onclick="showScreen('home')">
+        <span class="icon">🏠</span><span class="label">홈</span>
+      </button>
+      <button class="nav-btn" id="nb-hist" onclick="showScreen('hist')">
+        <span class="icon">📋</span><span class="label">기록</span>
+      </button>
+      <button class="nav-center" onclick="openModal()">➕</button>
+      <button class="nav-btn" id="nb-stat" onclick="showScreen('stat')">
+        <span class="icon">📊</span><span class="label">통계</span>
+      </button>
+      <button class="nav-btn" id="nb-set" onclick="showScreen('set')">
+        <span class="icon">⚙️</span><span class="label">설정</span>
+      </button>
+    </div>
+
+    <!-- 감정 입력 모달 -->
+    <div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <div class="modal-handle"></div>
+        <p class="modal-title">오늘 기분이 어때요?</p>
+        <div class="emo-picker">
+          <button class="emo-opt selected" data-emo="😊" data-label="기분 좋음" onclick="pickEmo(this)">😊</button>
+          <button class="emo-opt" data-emo="😐" data-label="보통" onclick="pickEmo(this)">😐</button>
+          <button class="emo-opt" data-emo="😢" data-label="슬픔" onclick="pickEmo(this)">😢</button>
+          <button class="emo-opt" data-emo="😡" data-label="화남" onclick="pickEmo(this)">😡</button>
+          <button class="emo-opt" data-emo="😴" data-label="피곤함" onclick="pickEmo(this)">😴</button>
+        </div>
+        <textarea class="note-input" id="note-input" rows="3"
+          placeholder="오늘 있었던 일을 짧게 적어보세요 (선택)"></textarea>
+        <button class="save-btn" onclick="saveEmo()">저장하기 ✓</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/core/storage.js"></script>
+  <script src="js/student/charts.js"></script>
+  <script src="js/student/ui.js"></script>
+  <script src="js/student/auth.js"></script>
+  <script src="js/student/theme.js"></script>
+  <script src="js/student/app.js"></script>
+</body>
+</html>

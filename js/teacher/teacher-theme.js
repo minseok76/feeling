@@ -37,6 +37,7 @@ function syncTeacherThemeToDom(theme) {
       window.renderInsightGraph();
     }
   } catch (e) {}
+  if (typeof renderTeacherClassRoomCard === 'function') renderTeacherClassRoomCard();
 }
 
 function applyTeacherTheme(theme) {
@@ -45,6 +46,7 @@ function applyTeacherTheme(theme) {
     localStorage.setItem(LS_TEACHER_THEME_KEY, t);
   } catch (e) {}
   syncTeacherThemeToDom(t);
+  if (typeof postEmotionCheckinSync === 'function') postEmotionCheckinSync('theme-teacher');
 }
 
 function initTeacherTheme() {

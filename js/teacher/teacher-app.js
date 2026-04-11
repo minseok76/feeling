@@ -131,6 +131,16 @@ async function initTeacherDashboard() {
 // =====================
 // 학생 앱과 동기화 (다른 탭에서 기록·이름 변경 시)
 // =====================
+function scheduleTeacherCrossTabRefresh() {
+  if (scheduleTeacherCrossTabRefresh._t) clearTimeout(scheduleTeacherCrossTabRefresh._t);
+  scheduleTeacherCrossTabRefresh._t = setTimeout(function () {
+    scheduleTeacherCrossTabRefresh._t = null;
+    if (document.visibilityState !== 'visible') return;
+    if (!teacherDashboardBooted) return;
+    void refreshDashboard();
+  }, 120);
+}
+
 function setupTeacherSync() {
   window.addEventListener('storage', function (e) {
     if (!e.key) return;
@@ -148,21 +158,36 @@ function setupTeacherSync() {
       e.key === 'emotion-checkin-teacher-custom-roster' ||
       e.key === 'emotion-checkin-teacher-hidden-json-ids' ||
       e.key === 'emotion-checkin-class-room' ||
-      e.key === 'emotion-checkin-student-linked-class-code'
+      e.key === 'emotion-checkin-student-linked-class-code' ||
+      e.key === 'emotion-checkin-teacher-accounts'
     ) {
       if (typeof renderTeacherClassRoomCard === 'function') renderTeacherClassRoomCard();
       if (typeof updateTeacherHeaderClassLabel === 'function') updateTeacherHeaderClassLabel();
       void refreshDashboard();
     }
   });
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') scheduleTeacherCrossTabRefresh();
+  });
+  window.addEventListener('pageshow', function (ev) {
+    if (ev.persisted) scheduleTeacherCrossTabRefresh();
+  });
   try {
     const ch = new BroadcastChannel('emotion-checkin');
     ch.onmessage = function (ev) {
       const k = ev.data && ev.data.kind;
       if (k === 'teacher-msg') return;
+      if (k === 'theme-student') return;
+      if (k === 'theme-teacher') {
+        if (typeof syncTeacherThemeToDom === 'function' && typeof getTeacherTheme === 'function') {
+          syncTeacherThemeToDom(getTeacherTheme());
+        }
+        return;
+      }
       if (k === 'class-room') {
         if (typeof renderTeacherClassRoomCard === 'function') renderTeacherClassRoomCard();
         if (typeof updateTeacherHeaderClassLabel === 'function') updateTeacherHeaderClassLabel();
+        void refreshDashboard();
         return;
       }
       void refreshDashboard();
@@ -282,6 +307,9 @@ function showTeacherRosterSub(sub) {
     const on = panel.getAttribute('data-roster-panel') === key;
     panel.classList.toggle('is-active', on);
   });
+  if (key === 'class-room' && typeof renderTeacherClassRoomCard === 'function') {
+    renderTeacherClassRoomCard();
+  }
 }
 
 function showTeacherSettingsSub(sub) {
@@ -296,6 +324,7 @@ function showTeacherSettingsSub(sub) {
   });
   if (key === 'roster') {
     showTeacherRosterSub(lastTeacherRosterSub);
+    if (typeof renderTeacherClassRoomCard === 'function') renderTeacherClassRoomCard();
   }
 }
 
@@ -638,16 +667,26 @@ function renderDetailPanel(student) {
     : metaTail;
 
   // 오늘 감정
+  const recAtEl = document.getElementById('d-today-recorded-at');
   if (hasToday) {
     const t = emos[0];
     document.getElementById('d-today-emo').textContent = t.emo;
     document.getElementById('d-today-label').textContent = t.label;
     document.getElementById('d-today-note').textContent =
       t.note ? `"${t.note}"` : '메모 없음';
+    if (recAtEl) {
+      const line = formatRecordDateTime(t.date);
+      recAtEl.textContent = line ? `기록 시각 · ${line}` : '';
+      recAtEl.hidden = !line;
+    }
   } else {
     document.getElementById('d-today-emo').textContent = '❓';
     document.getElementById('d-today-label').textContent = '오늘 미기록';
     document.getElementById('d-today-note').textContent = '';
+    if (recAtEl) {
+      recAtEl.textContent = '';
+      recAtEl.hidden = true;
+    }
   }
 
   // 이번 주 감정 (최근 5일)
@@ -688,7 +727,7 @@ function renderDetailPanel(student) {
         <p class="d-log-label">${e.label}</p>
         <p class="d-log-note">${e.note || '메모 없음'}</p>
       </div>
-      <span class="d-log-date">${formatDateTeacher(e.date)}</span>
+      <span class="d-log-date">${formatRecordDateTime(e.date)}</span>
     `;
     histList.appendChild(div);
   });
@@ -748,16 +787,6 @@ let insightSelectedDayStr = null;
 function getInsightStudent() {
   if (insightOpenForId == null) return null;
   return allStudents.find(s => s.id === insightOpenForId);
-}
-
-function formatInsightTime(isoString) {
-  const d = new Date(isoString);
-  const h = d.getHours();
-  const m = d.getMinutes();
-  const mm = m < 10 ? '0' + m : m;
-  if (h < 12) return `오전 ${h}:${mm}`;
-  if (h === 12) return `낮 12:${mm}`;
-  return `오후 ${h - 12}:${mm}`;
 }
 
 function escInsightHtml(s) {
@@ -969,7 +998,7 @@ function renderInsightDayDetail(d, entries) {
         <div class="insight-day-entry-top">
           <span class="insight-day-entry-emo">${e.emo}</span>
           <span class="insight-day-entry-label">${escInsightHtml(e.label)}</span>
-          <span class="insight-day-entry-time">${formatInsightTime(e.date)}</span>
+          <span class="insight-day-entry-time">${formatRecordDateTime(e.date)}</span>
         </div>
         <p class="insight-day-entry-note">${e.note ? escInsightHtml(e.note) : '메모 없음'}</p>
       </div>

@@ -4,7 +4,7 @@
    localStorage를 사용해요
 
    교사 화면·다른 탭과 맞추기:
-     • notifyEmotionAppSync — BroadcastChannel로 같은 출처 탭에 알림
+     • notifyEmotionAppSync — cross-tab.js 의 BroadcastChannel(postEmotionCheckinSync)로 같은 출처 탭에 알림
      • get/set/clearTeacherMessage — 선생님이 보내는 한 줄 메시지
 =========================== */
 
@@ -21,10 +21,14 @@ function setEmotionStorageUid(uid) {
   else localStorage.removeItem(LS_ACTIVE_UID_KEY);
 }
 
-function notifyEmotionAppSync(kind) {
+function notifyEmotionAppSync(kind, detail) {
+  if (typeof postEmotionCheckinSync === 'function') {
+    postEmotionCheckinSync(kind, detail);
+    return;
+  }
   try {
     const ch = new BroadcastChannel('emotion-checkin');
-    ch.postMessage({ kind: kind || 'update' });
+    ch.postMessage({ kind: kind || 'update', ts: Date.now(), detail: detail == null ? null : detail });
     ch.close();
   } catch (e) {}
 }
@@ -135,13 +139,70 @@ function formatDate(isoString) {
   return `${d.getMonth() + 1}월 ${d.getDate()}일`;
 }
 
-// 시간을 한국어 형식으로 바꿔요 (예: 오후 2시)
+// 시간을 24시간 형식으로 바꿔요 (예: 14:30)
 function formatTime(isoString) {
   const d = new Date(isoString);
   const h = d.getHours();
-  if (h < 12) return `오전 ${h}시`;
-  if (h === 12) return '낮 12시';
-  return `오후 ${h - 12}시`;
+  const m = d.getMinutes();
+  return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+}
+
+/** 기록 표시: 4월 11일 14:30 (24시간, 분까지) */
+function formatRecordDateTime(isoString) {
+  if (!isoString) return '';
+  return formatDate(isoString) + ' ' + formatTime(isoString);
+}
+
+function formatClockNow24() {
+  const d = new Date();
+  return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+
+/** 학생 앱 폰 상태바 — 0~23시 기준 HH:mm (로케일과 무관) */
+function formatStatusBarTime24() {
+  const d = new Date();
+  return (
+    String(d.getHours()).padStart(2, '0') +
+    ':' +
+    String(d.getMinutes()).padStart(2, '0')
+  );
+}
+
+const LS_REMIND_TIME_KEY = 'emotion-checkin-remind-time';
+const LS_REMIND_ON_KEY = 'emotion-checkin-remind-on';
+
+function getRemindTimeHHmm() {
+  try {
+    const v = localStorage.getItem(LS_REMIND_TIME_KEY);
+    if (v && /^([01]\d|2[0-3]):[0-5]\d$/.test(v)) return v;
+  } catch (e) {}
+  const now = formatClockNow24();
+  try {
+    localStorage.setItem(LS_REMIND_TIME_KEY, now);
+  } catch (e2) {}
+  return now;
+}
+
+function setRemindTimeHHmm(hhmm) {
+  const s = String(hhmm || '').trim();
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(s)) return;
+  localStorage.setItem(LS_REMIND_TIME_KEY, s);
+  notifyEmotionAppSync('remind-settings');
+}
+
+function isRemindNotifyEnabled() {
+  try {
+    const v = localStorage.getItem(LS_REMIND_ON_KEY);
+    if (v === null || v === '') return true;
+    return v === '1';
+  } catch (e) {
+    return true;
+  }
+}
+
+function setRemindNotifyEnabled(on) {
+  localStorage.setItem(LS_REMIND_ON_KEY, on ? '1' : '0');
+  notifyEmotionAppSync('remind-settings');
 }
 
 // =====================
@@ -354,6 +415,7 @@ function getTeacherAccounts() {
 
 function setTeacherAccounts(obj) {
   localStorage.setItem(LS_TEACHER_ACCOUNTS_KEY, JSON.stringify(obj));
+  notifyEmotionAppSync('teacher-accounts');
 }
 
 // =====================

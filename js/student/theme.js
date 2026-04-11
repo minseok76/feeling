@@ -45,6 +45,7 @@ function applyStudentTheme(theme) {
   } catch (e) {}
   syncStudentThemeToDom(t);
   refreshStatsIfVisible();
+  if (typeof postEmotionCheckinSync === 'function') postEmotionCheckinSync('theme-student');
 }
 
 function syncStudentThemeFromOtherTab() {

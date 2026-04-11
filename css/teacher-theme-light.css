@@ -2,6 +2,7 @@
 
 html.teacher-page[data-teacher-theme='light'] body.teacher-body {
   background: #e8edf5;
+  color: #0f172a;
 }
 
 html.teacher-page[data-teacher-theme='light'] .teacher-auth-gate {
@@ -248,6 +249,10 @@ html.teacher-page[data-teacher-theme='light'] .today-badge {
 
 html.teacher-page[data-teacher-theme='light'] .today-badge span:last-child {
   color: #0f172a;
+}
+
+html.teacher-page[data-teacher-theme='light'] .detail-record-at {
+  color: #64748b;
 }
 
 html.teacher-page[data-teacher-theme='light'] .detail-note {
@@ -523,6 +528,98 @@ html.teacher-page[data-teacher-theme='light'] .teacher-manage-subtitle {
 
 html.teacher-page[data-teacher-theme='light'] .teacher-field .teacher-roster-label {
   color: #475569;
+}
+
+html.teacher-page[data-teacher-theme='light'] .teacher-roster-label {
+  color: #334155;
+}
+
+html.teacher-page[data-teacher-theme='light'] .teacher-roster-opt {
+  color: #64748b;
+}
+
+html.teacher-page[data-teacher-theme='light'] .teacher-settings-sub strong {
+  color: #5b21b6;
+}
+
+html.teacher-page[data-teacher-theme='light'] .teacher-class-room-line {
+  color: #334155;
+}
+
+html.teacher-page[data-teacher-theme='light'] .teacher-class-room-line .teacher-class-room-k,
+html.teacher-page[data-teacher-theme='light'] p.teacher-class-room-k {
+  color: #64748b;
+}
+
+html.teacher-page[data-teacher-theme='light'] .teacher-class-room-line strong,
+html.teacher-page[data-teacher-theme='light'] #teacher-class-room-name {
+  color: #0f172a;
+}
+
+html.teacher-page[data-teacher-theme='light'] .teacher-class-code-box {
+  color: #5b21b6;
+  background: #f5f3ff;
+  border-color: #c4b5fd;
+}
+
+html.teacher-page[data-teacher-theme='light'] .teacher-class-code-box .teacher-class-code-text {
+  color: #5b21b6;
+  -webkit-text-fill-color: #5b21b6;
+}
+
+html.teacher-page[data-teacher-theme='light']
+  .teacher-settings-card.teacher-class-room-card
+  #teacher-class-room-active {
+  color: #0f172a;
+}
+
+html.teacher-page[data-teacher-theme='light']
+  .teacher-settings-card.teacher-class-room-card
+  #teacher-class-room-active
+  .teacher-class-room-line {
+  color: #0f172a;
+}
+
+html.teacher-page[data-teacher-theme='light']
+  .teacher-settings-card.teacher-class-room-card
+  #teacher-class-room-active
+  .teacher-class-room-line
+  .teacher-class-room-k,
+html.teacher-page[data-teacher-theme='light']
+  .teacher-settings-card.teacher-class-room-card
+  #teacher-class-room-active
+  p.teacher-class-room-k {
+  color: #64748b;
+}
+
+html.teacher-page[data-teacher-theme='light']
+  .teacher-settings-card.teacher-class-room-card
+  #teacher-class-room-active
+  .teacher-class-room-line
+  strong,
+html.teacher-page[data-teacher-theme='light']
+  .teacher-settings-card.teacher-class-room-card
+  #teacher-class-room-active
+  #teacher-class-room-name {
+  color: #0f172a;
+}
+
+html.teacher-page[data-teacher-theme='light']
+  .teacher-settings-card.teacher-class-room-card
+  #teacher-class-room-active
+  #teacher-class-room-code.teacher-class-code-box {
+  color: #5b21b6;
+  -webkit-text-fill-color: #5b21b6;
+  background: #f5f3ff;
+  border-color: #c4b5fd;
+}
+
+html.teacher-page[data-teacher-theme='light'] .teacher-auth-msg:not(.teacher-auth-msg--error) {
+  color: #475569;
+}
+
+html.teacher-page[data-teacher-theme='light'] .teacher-manage-row-meta {
+  color: #64748b;
 }
 
 html.teacher-page[data-teacher-theme='light'] .teacher-settings-toggle-lbl {

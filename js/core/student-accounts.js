@@ -68,6 +68,7 @@ async function linkStudentLoginToJsonRoster(userId, accOrProfile) {
     if (acc[uid]) {
       acc[uid].linkedRosterId = found.id;
       if (typeof setLocalAccounts === 'function') setLocalAccounts(acc);
+      if (typeof notifyEmotionAppSync === 'function') notifyEmotionAppSync('profile');
     }
     return found.id;
   } catch (e) {

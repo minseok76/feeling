@@ -143,6 +143,7 @@
                 <span id="d-today-emo">-</span>
                 <span id="d-today-label">-</span>
               </div>
+              <p class="detail-record-at" id="d-today-recorded-at" hidden></p>
               <p class="detail-note" id="d-today-note"></p>
             </div>
             <div class="detail-week">
@@ -251,7 +252,7 @@
               <div class="teacher-settings-field-grid teacher-settings-field-grid--2">
                 <div class="teacher-field">
                   <label class="teacher-roster-label" for="teacher-acct-grade">학년 <span class="teacher-roster-req">*</span></label>
-                  <input class="teacher-roster-input" id="teacher-acct-grade" maxlength="40" placeholder="예: 고등학교 2학년" required>
+                  <input class="teacher-roster-input" id="teacher-acct-grade" maxlength="40" placeholder="예: 2학년" required>
                 </div>
                 <div class="teacher-field">
                   <label class="teacher-roster-label" for="teacher-acct-class">반 <span class="teacher-roster-req">*</span></label>
@@ -332,7 +333,7 @@
                 <div class="teacher-settings-field-grid teacher-settings-field-grid--2">
                   <div class="teacher-field">
                     <label class="teacher-roster-label" for="teacher-roster-grade">학년</label>
-                    <input class="teacher-roster-input" id="teacher-roster-grade" maxlength="40" placeholder="예: 고등학교 2학년">
+                    <input class="teacher-roster-input" id="teacher-roster-grade" maxlength="40" placeholder="예: 2학년">
                   </div>
                   <div class="teacher-field">
                     <label class="teacher-roster-label" for="teacher-roster-class">반</label>
@@ -416,6 +417,7 @@
   </div><!-- /teacher-app-shell -->
 
   <script src="js/core/paths.js"></script>
+  <script src="js/core/cross-tab.js"></script>
   <script src="js/core/storage.js"></script>
   <script src="js/core/student-accounts.js"></script>
   <script src="js/teacher/teacher-data.js"></script>

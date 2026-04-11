@@ -621,6 +621,11 @@
   text-align: right;
 }
 
+.name-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .profile-guard-field:disabled {
   opacity: 0.55;
   cursor: not-allowed;

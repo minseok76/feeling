@@ -62,6 +62,7 @@ function showStudentPhone() {
   const phone = document.getElementById('phone');
   if (gate) gate.style.display = 'none';
   if (phone) phone.style.display = 'flex';
+  if (typeof initStudentStatusBarClock === 'function') initStudentStatusBarClock();
 }
 
 function migrateLegacyEmotions(uid) {

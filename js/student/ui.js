@@ -47,12 +47,90 @@ function renderTodayCard() {
   const emotions = getEmotions();
   const today = new Date().toDateString();
   const todayEmo = emotions.find(e => new Date(e.date).toDateString() === today);
+  const timeEl = document.getElementById('today-time');
+  const emoEl = document.getElementById('today-emo');
+  const labelEl = document.getElementById('today-label');
 
   if (todayEmo) {
-    document.getElementById('today-emo').textContent = todayEmo.emo;
-    document.getElementById('today-label').textContent = todayEmo.label;
-    document.getElementById('today-time').textContent =
-      `오늘 · ${formatTime(todayEmo.date)}`;
+    if (emoEl) emoEl.textContent = todayEmo.emo;
+    if (labelEl) labelEl.textContent = todayEmo.label;
+    if (timeEl) timeEl.textContent = '오늘 · ' + formatRecordDateTime(todayEmo.date);
+  } else {
+    if (emoEl) emoEl.textContent = '😊';
+    if (labelEl) labelEl.textContent = '아직 기록 없음';
+    if (timeEl) timeEl.textContent = '오늘 · ' + (typeof formatClockNow24 === 'function' ? formatClockNow24() : '--:--');
+  }
+}
+
+function applyRemindSettingsToDom() {
+  const input = document.getElementById('settings-remind-time');
+  const summary = document.getElementById('settings-remind-summary');
+  const toggle = document.getElementById('t-notify');
+  const hhmm =
+    typeof getRemindTimeHHmm === 'function' ? getRemindTimeHHmm() : '09:00';
+  const on = typeof isRemindNotifyEnabled === 'function' ? isRemindNotifyEnabled() : true;
+  if (input) {
+    input.value = hhmm;
+    input.disabled = !on;
+    input.setAttribute('aria-disabled', on ? 'false' : 'true');
+  }
+  if (summary) {
+    summary.textContent = on
+      ? '매일 ' + hhmm + ' (24시간 형식)에 맞춰 두었어요.'
+      : '알림이 꺼져 있어요. 켜면 매일 ' + hhmm + ' 기준으로 표시돼요.';
+  }
+  if (toggle) {
+    toggle.classList.toggle('on', on);
+    toggle.setAttribute('aria-checked', on ? 'true' : 'false');
+  }
+}
+
+function tickStatusBarClock() {
+  const el = document.getElementById('status-bar-clock');
+  if (!el) return;
+  if (typeof formatStatusBarTime24 === 'function') {
+    el.textContent = formatStatusBarTime24();
+    return;
+  }
+  const d = new Date();
+  el.textContent =
+    String(d.getHours()).padStart(2, '0') +
+    ':' +
+    String(d.getMinutes()).padStart(2, '0');
+}
+
+function initStudentStatusBarClock() {
+  tickStatusBarClock();
+  if (typeof window.__emotionStatusClockInterval === 'number') {
+    clearInterval(window.__emotionStatusClockInterval);
+  }
+  window.__emotionStatusClockInterval = window.setInterval(tickStatusBarClock, 1000);
+}
+
+function initStudentRemindSettings() {
+  if (typeof getRemindTimeHHmm === 'function') getRemindTimeHHmm();
+  applyRemindSettingsToDom();
+
+  const input = document.getElementById('settings-remind-time');
+  if (input && input.dataset.wiredRemind !== '1') {
+    input.dataset.wiredRemind = '1';
+    input.addEventListener('change', function () {
+      if (typeof setRemindTimeHHmm === 'function') setRemindTimeHHmm(input.value);
+      applyRemindSettingsToDom();
+    });
+  }
+
+  const toggle = document.getElementById('t-notify');
+  if (toggle && toggle.dataset.wiredRemind !== '1') {
+    toggle.dataset.wiredRemind = '1';
+    toggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      const next = !toggle.classList.contains('on');
+      toggle.classList.toggle('on', next);
+      toggle.setAttribute('aria-checked', next ? 'true' : 'false');
+      if (typeof setRemindNotifyEnabled === 'function') setRemindNotifyEnabled(next);
+      applyRemindSettingsToDom();
+    });
   }
 }
 
@@ -79,7 +157,7 @@ function renderRecentLogs() {
         <p class="log-title">${e.label}</p>
         <p class="log-sub">${e.note || '메모 없음'}</p>
       </div>
-      <p class="log-time">${formatDate(e.date)}<br>${formatTime(e.date)}</p>
+      <p class="log-time">${formatRecordDateTime(e.date)}</p>
     `;
     container.appendChild(div);
   });
@@ -108,7 +186,7 @@ function renderHistoryList() {
         <p class="log-title">${e.label}</p>
         <p class="log-sub">${e.note || '메모 없음'}</p>
       </div>
-      <span class="hist-date">${formatDate(e.date)}</span>
+      <span class="hist-date">${formatRecordDateTime(e.date)}</span>
     `;
     container.appendChild(div);
   });

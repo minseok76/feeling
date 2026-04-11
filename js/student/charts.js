@@ -157,7 +157,7 @@ function renderStudentDayDetail(d, entries) {
         <div class="student-day-entry-top">
           <span class="student-day-entry-emo">${e.emo}</span>
           <span class="student-day-entry-label">${escStudentCal(e.label)}</span>
-          <span class="student-day-entry-time">${formatTime(e.date)}</span>
+          <span class="student-day-entry-time">${formatRecordDateTime(e.date)}</span>
         </div>
         <p class="student-day-entry-note">${e.note ? escStudentCal(e.note) : '메모 없음'}</p>
       </div>

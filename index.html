@@ -45,7 +45,7 @@
           <label class="auth-label" for="signup-name">이름</label>
           <input class="auth-input" id="signup-name" maxlength="30" placeholder="홍길동" autocomplete="name" required>
           <label class="auth-label" for="signup-grade">학년</label>
-          <input class="auth-input" id="signup-grade" maxlength="40" placeholder="예: 중학교 2학년" autocomplete="off" required>
+          <input class="auth-input" id="signup-grade" maxlength="40" placeholder="예: 2학년" autocomplete="off" required>
           <label class="auth-label" for="signup-class">반</label>
           <input class="auth-input" id="signup-class" maxlength="20" placeholder="예: 3반" autocomplete="off" required>
           <label class="auth-label" for="signup-student-number">번호(자리·출석번호) <span class="auth-hint">반에서 쓰는 번호</span></label>
@@ -65,8 +65,15 @@
 
   <div id="phone" class="phone" style="display:none;">
     <div class="status-bar">
-      <span>9:41</span>
-      <span>●●● 🔋</span>
+      <span id="status-bar-clock" class="status-bar-clock" aria-live="polite" title="24시간 형식">--:--</span>
+      <span class="status-bar-wifi" aria-hidden="true" title="Wi‑Fi">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12.55a11 11 0 0 1 14.08 0" />
+          <path d="M1.42 9a16 16 0 0 1 21.16 0" />
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+          <line x1="12" y1="20" x2="12.01" y2="20" />
+        </svg>
+      </span>
     </div>
 
     <!-- 홈 화면 -->
@@ -88,7 +95,7 @@
             <div class="big-emo" id="today-emo">😊</div>
             <div class="emo-info">
               <h2 id="today-label">기분 좋음</h2>
-              <p id="today-time">오늘 · 오후 2:30</p>
+              <p id="today-time">오늘 · --:--</p>
               <span class="emo-tag">😊 Happy</span>
             </div>
           </div>
@@ -186,9 +193,17 @@
         </div>
         <div class="set-section">
           <div class="set-row">
-            <div><p class="set-label">알림</p><p class="set-sub">매일 오후 9시</p></div>
-            <div class="toggle on" id="t-notify" onclick="this.classList.toggle('on')"></div>
+            <div>
+              <p class="set-label">매일 알림</p>
+              <p class="set-sub" id="settings-remind-summary">매일 00:00 (24시간 형식)</p>
+            </div>
+            <div class="toggle on" id="t-notify" role="switch" aria-checked="true" aria-label="알림 사용"></div>
           </div>
+          <div style="margin-top:10px;">
+            <label class="auth-label" for="settings-remind-time">알림 시각</label>
+            <input type="time" class="name-input" id="settings-remind-time" step="60" autocomplete="off" style="width:100%;max-width:200px;box-sizing:border-box;">
+          </div>
+          <p class="set-sub" style="margin-top:6px;font-size:12px;opacity:0.85;">처음에는 지금 시각이 들어가요. 바꾸면 매일 그 시각(24시간 기준)으로 표시돼요.</p>
           <div class="set-row">
             <div><p class="set-label">다크 모드</p><p class="set-sub">켜면 어두운 화면, 끄면 밝은 화면이에요</p></div>
             <div class="toggle on" id="t-dark" role="switch" aria-checked="true" aria-label="다크 모드"></div>
@@ -255,6 +270,7 @@
   </div>
 
   <script src="js/core/paths.js"></script>
+  <script src="js/core/cross-tab.js"></script>
   <script src="js/core/storage.js"></script>
   <script src="js/core/student-accounts.js"></script>
   <script src="js/student/charts.js"></script>

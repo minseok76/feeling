@@ -46,6 +46,23 @@ body {
   flex-shrink: 0;
 }
 
+.status-bar-clock {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+  min-width: 5.2em;
+  text-align: left;
+}
+
+.status-bar-wifi {
+  display: flex;
+  align-items: center;
+  opacity: 0.92;
+}
+
+.status-bar-wifi svg {
+  display: block;
+}
+
 /* 화면 전환 영역 */
 .screen {
   flex: 1;

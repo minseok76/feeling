@@ -22,6 +22,7 @@ function showScreen(id) {
   // 통계 화면 열 때 차트 다시 그리기
   if (id === 'stat') renderStats();
   if (id === 'home' && typeof renderTeacherBanner === 'function') renderTeacherBanner();
+  if (id === 'set' && typeof applyRemindSettingsToDom === 'function') applyRemindSettingsToDom();
 }
 
 // 로그인 직후 (auth.js에서 호출)
@@ -34,9 +35,12 @@ function onStudentLogin() {
 document.addEventListener('DOMContentLoaded', function () {
   console.log('감정 체크인 앱 시작!');
 
+  if (typeof initStudentStatusBarClock === 'function') initStudentStatusBarClock();
+
   setupStudentSync();
 
   if (typeof initStudentTheme === 'function') initStudentTheme();
+  if (typeof initStudentRemindSettings === 'function') initStudentRemindSettings();
 
   const bannerClose = document.getElementById('teacher-banner-close');
   if (bannerClose) {
@@ -65,6 +69,24 @@ function syncProfileUiFromAccounts() {
   if (acc) updateHomeAndSettings(acc, uid);
 }
 
+function scheduleStudentCrossTabRefresh() {
+  if (scheduleStudentCrossTabRefresh._t) clearTimeout(scheduleStudentCrossTabRefresh._t);
+  scheduleStudentCrossTabRefresh._t = setTimeout(function () {
+    scheduleStudentCrossTabRefresh._t = null;
+    if (document.visibilityState !== 'visible') return;
+    try {
+      if (typeof renderTeacherBanner === 'function') renderTeacherBanner();
+      if (typeof window.updateStudentClassLinkUiAll === 'function') {
+        window.updateStudentClassLinkUiAll();
+      }
+      syncProfileUiFromAccounts();
+      if (typeof renderAll === 'function') renderAll();
+      if (typeof applyRemindSettingsToDom === 'function') applyRemindSettingsToDom();
+      if (typeof tickStatusBarClock === 'function') tickStatusBarClock();
+    } catch (err) {}
+  }, 120);
+}
+
 function setupStudentSync() {
   window.addEventListener('storage', function (e) {
     if (!e.key) return;
@@ -82,7 +104,9 @@ function setupStudentSync() {
       e.key === 'emotion-checkin-grade-label' ||
       e.key === 'emotion-checkin-class-label' ||
       e.key === 'emotion-checkin-class-room' ||
-      e.key === 'emotion-checkin-student-linked-class-code'
+      e.key === 'emotion-checkin-student-linked-class-code' ||
+      e.key === 'emotion-checkin-teacher-custom-roster' ||
+      e.key === 'emotion-checkin-teacher-hidden-json-ids'
     ) {
       if (
         e.key === 'emotion-checkin-accounts' ||
@@ -94,21 +118,59 @@ function setupStudentSync() {
       }
       renderAll();
     }
+    if (e.key === 'emotion-checkin-remind-time' || e.key === 'emotion-checkin-remind-on') {
+      if (typeof applyRemindSettingsToDom === 'function') applyRemindSettingsToDom();
+    }
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') scheduleStudentCrossTabRefresh();
+  });
+  window.addEventListener('pageshow', function (ev) {
+    if (ev.persisted) scheduleStudentCrossTabRefresh();
   });
   try {
     const ch = new BroadcastChannel('emotion-checkin');
     ch.onmessage = function (ev) {
       const k = ev.data && ev.data.kind;
-      if (k === 'teacher-msg') renderTeacherBanner();
-      else if (k === 'class-room') {
+      if (k === 'teacher-msg') {
+        if (typeof renderTeacherBanner === 'function') renderTeacherBanner();
+        return;
+      }
+      if (k === 'theme-student') {
+        if (typeof syncStudentThemeFromOtherTab === 'function') syncStudentThemeFromOtherTab();
+        return;
+      }
+      if (k === 'theme-teacher' || k === 'teacher-accounts') return;
+      if (k === 'remind-settings') {
+        if (typeof applyRemindSettingsToDom === 'function') applyRemindSettingsToDom();
+        return;
+      }
+      if (k === 'class-room') {
         if (typeof window.updateStudentClassLinkUiAll === 'function') {
           window.updateStudentClassLinkUiAll();
         }
         renderAll();
-      } else if (k === 'emotions' || k === 'profile') {
-        if (k === 'profile') syncProfileUiFromAccounts();
-        renderAll();
+        return;
       }
+      if (k === 'emotions') {
+        renderAll();
+        return;
+      }
+      if (k === 'profile') {
+        syncProfileUiFromAccounts();
+        renderAll();
+        return;
+      }
+      if (k === 'teacher-roster') {
+        syncProfileUiFromAccounts();
+        renderAll();
+        return;
+      }
+      if (typeof window.updateStudentClassLinkUiAll === 'function') {
+        window.updateStudentClassLinkUiAll();
+      }
+      syncProfileUiFromAccounts();
+      renderAll();
     };
   } catch (e) {}
 }

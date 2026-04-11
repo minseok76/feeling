@@ -40,8 +40,8 @@ html.teacher-page:not([data-teacher-theme='light']) {
 
 /* body: 학생 앱과 달리 flex 중앙 정렬 없음 */
 body.teacher-body {
-  background: #0a0a12;
-  color: #e8e8f0;
+  background: #0b0b14;
+  color: #f1f5f9;
   display: block;
   min-height: 100vh;
   min-height: 100dvh;
@@ -57,8 +57,8 @@ body.teacher-body {
 
 /* 헤더 */
 .teacher-header {
-  background: #14141e;
-  border-bottom: 1px solid #1e1e2e;
+  background: #111118;
+  border-bottom: 1px solid #2a2a3c;
   padding: calc(16px + env(safe-area-inset-top, 0px)) 0 16px;
   margin-bottom: 24px;
 }
@@ -84,13 +84,13 @@ body.teacher-body {
 
 .header-sub {
   font-size: 13px;
-  color: #666;
+  color: #94a3b8;
   margin: 0;
 }
 
 .header-sync {
   font-size: 11px;
-  color: #5b4a9e;
+  color: #c4b5fd;
   margin: 6px 0 0;
   font-weight: 600;
 }
@@ -130,7 +130,7 @@ body.teacher-body {
 
 .broadcast-hint {
   font-size: 12px;
-  color: #666;
+  color: #9ca3af;
   margin: 0 0 10px;
   line-height: 1.5;
 }
@@ -197,8 +197,8 @@ body.teacher-body {
 }
 
 .summary-card {
-  background: #1a1a26;
-  border: 1px solid #252535;
+  background: #16161f;
+  border: 1px solid #2a2a3d;
   border-radius: 18px;
   padding: 20px 16px;
   text-align: center;
@@ -227,7 +227,7 @@ body.teacher-body {
 
 .summary-lbl {
   font-size: 12px;
-  color: #666;
+  color: #9ca3af;
 }
 
 /* 메인 2컬럼 레이아웃 */
@@ -243,8 +243,8 @@ body.teacher-body {
 
 /* 왼쪽: 학생 목록 섹션 */
 .student-list-section {
-  background: #1a1a26;
-  border: 1px solid #252535;
+  background: #16161f;
+  border: 1px solid #2a2a3d;
   border-radius: 20px;
   padding: 20px;
   height: fit-content;
@@ -330,7 +330,7 @@ body.teacher-body {
 
 .detail-profile-trigger-hint {
   font-size: 11px;
-  color: #888;
+  color: #a8a8bc;
   font-weight: 600;
 }
 
@@ -437,12 +437,12 @@ body.teacher-body {
 .s-name-meta {
   font-weight: 500;
   font-size: 12px;
-  color: #888;
+  color: #a8a8bc;
 }
 
 .s-sub {
   font-size: 12px;
-  color: #666;
+  color: #9ca3af;
   margin: 0;
 }
 
@@ -501,7 +501,7 @@ body.teacher-body {
 
 .detail-meta {
   font-size: 13px;
-  color: #666;
+  color: #9ca3af;
   margin: 0;
 }
 
@@ -535,7 +535,7 @@ body.teacher-body {
 
 .detail-edit-hint {
   font-size: 12px;
-  color: #666;
+  color: #9ca3af;
   margin: 0 0 14px;
   line-height: 1.5;
 }
@@ -544,7 +544,7 @@ body.teacher-body {
   display: block;
   font-size: 11px;
   font-weight: 700;
-  color: #888;
+  color: #a8a8bc;
   margin: 10px 0 6px;
   text-transform: uppercase;
   letter-spacing: 0.4px;
@@ -598,7 +598,7 @@ body.teacher-body {
 .detail-section-lbl {
   font-size: 12px;
   font-weight: 700;
-  color: #666;
+  color: #9ca3af;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin: 0 0 10px;
@@ -633,7 +633,7 @@ body.teacher-body {
 
 .detail-note {
   font-size: 13px;
-  color: #888;
+  color: #a8a8bc;
   font-style: italic;
   margin: 0;
   padding: 8px 12px;
@@ -667,7 +667,7 @@ body.teacher-body {
 
 .week-emo-item .w-day {
   font-size: 10px;
-  color: #666;
+  color: #9ca3af;
   display: block;
   margin-top: 4px;
 }
@@ -703,7 +703,7 @@ body.teacher-body {
 
 .d-log-note {
   font-size: 12px;
-  color: #666;
+  color: #9ca3af;
   margin: 0;
 }
 
@@ -772,7 +772,7 @@ body.teacher-body {
   .teacher-student-list-hint {
     display: block;
     font-size: 11px;
-    color: #888;
+    color: #a8a8bc;
     line-height: 1.45;
     margin: -8px 0 12px;
     font-weight: 600;
@@ -921,7 +921,7 @@ body.teacher-body {
   }
 
   .s-name-row .s-num {
-    color: #666;
+    color: #9ca3af;
     font-size: 12px;
     font-weight: 400;
   }
@@ -1225,7 +1225,7 @@ body.teacher-body {
 
 .insight-block-desc {
   font-size: 12px;
-  color: #666;
+  color: #9ca3af;
   margin: 0 0 14px;
   line-height: 1.4;
 }
@@ -1278,7 +1278,7 @@ body.teacher-body {
 
 .insight-graph-empty {
   font-size: 13px;
-  color: #888;
+  color: #a8a8bc;
   text-align: center;
   padding: 20px 0;
 }
@@ -1374,7 +1374,7 @@ body.teacher-body {
 .insight-cal-cell .insight-cal-daynum {
   font-size: 11px;
   font-weight: 700;
-  color: #888;
+  color: #a8a8bc;
 }
 
 .insight-cal-cell .insight-cal-emo {
@@ -1441,7 +1441,7 @@ body.teacher-body {
 
 .insight-day-entry-note {
   font-size: 12px;
-  color: #888;
+  color: #a8a8bc;
   line-height: 1.45;
   margin: 0;
   padding-left: 28px;
@@ -1449,7 +1449,7 @@ body.teacher-body {
 
 .insight-day-empty {
   font-size: 13px;
-  color: #666;
+  color: #9ca3af;
   margin: 0;
   text-align: center;
 }
@@ -1521,7 +1521,7 @@ body.teacher-body {
 
 .teacher-auth-lead {
   font-size: 13px;
-  color: #666;
+  color: #9ca3af;
   text-align: center;
   line-height: 1.55;
   margin: 0 0 20px;
@@ -1544,7 +1544,7 @@ body.teacher-body {
   border: 1px solid #333;
   border-radius: 12px;
   background: #1a1a26;
-  color: #888;
+  color: #a8a8bc;
   font-size: 14px;
   font-weight: 700;
   font-family: 'Nunito', sans-serif;
@@ -1566,7 +1566,7 @@ body.teacher-body {
 .teacher-auth-label {
   font-size: 12px;
   font-weight: 700;
-  color: #888;
+  color: #a8a8bc;
   margin-top: 8px;
 }
 
@@ -1661,9 +1661,9 @@ body.teacher-body {
   font-weight: 700;
   padding: 10px 12px;
   border-radius: 12px;
-  border: 1px solid #2e2e42;
-  background: #1a1a26;
-  color: #aaa;
+  border: 1px solid #34344a;
+  background: #171722;
+  color: #b8b8cc;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
   flex: 1;
@@ -1812,7 +1812,7 @@ body.teacher-body {
 .teacher-group-page-lead {
   margin: 0 0 18px;
   font-size: 13px;
-  color: #888;
+  color: #a8a8bc;
   line-height: 1.5;
 }
 
@@ -1834,7 +1834,7 @@ body.teacher-body {
 
 .teacher-group-grid-hint {
   font-size: 12px;
-  color: #666;
+  color: #9ca3af;
   margin: 0 0 10px;
   font-weight: 600;
 }
@@ -1903,7 +1903,7 @@ body.teacher-body {
 
 .teacher-group-chart-pct {
   font-weight: 600;
-  color: #666;
+  color: #9ca3af;
 }
 
 .teacher-group-list {
@@ -1952,7 +1952,7 @@ body.teacher-body {
 
 .teacher-group-list-num {
   font-size: 12px;
-  color: #666;
+  color: #9ca3af;
   justify-self: end;
 }
 
@@ -1975,7 +1975,7 @@ body.teacher-body {
 
 .teacher-group-empty {
   font-size: 13px;
-  color: #666;
+  color: #9ca3af;
   padding: 20px 0;
   text-align: center;
 }
@@ -2426,7 +2426,7 @@ html.teacher-page:not([data-teacher-theme='light'])
 
 .teacher-manage-empty {
   font-size: 13px;
-  color: #666;
+  color: #9ca3af;
   padding: 16px;
   text-align: center;
   border: 1px dashed #333;
@@ -2457,7 +2457,7 @@ html.teacher-page:not([data-teacher-theme='light'])
   padding: 2px 8px;
   border-radius: 6px;
   background: #252535;
-  color: #888;
+  color: #a8a8bc;
   margin-right: 8px;
   vertical-align: middle;
 }
@@ -2533,7 +2533,7 @@ html.teacher-page:not([data-teacher-theme='light'])
   border: none;
   border-radius: 12px;
   background: transparent;
-  color: #666;
+  color: #9ca3af;
   font-family: 'Nunito', sans-serif;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;

@@ -1,12 +1,12 @@
 /* 교사 대시보드 라이트 테마 — html.teacher-page[data-teacher-theme="light"] */
 
 html.teacher-page[data-teacher-theme='light'] body.teacher-body {
-  background: #e8edf5;
+  background: #f1f5f9;
   color: #0f172a;
 }
 
 html.teacher-page[data-teacher-theme='light'] .teacher-auth-gate {
-  background: #e8edf5;
+  background: #f1f5f9;
 }
 
 html.teacher-page[data-teacher-theme='light'] .teacher-auth-card {
@@ -50,22 +50,29 @@ html.teacher-page[data-teacher-theme='light'] .teacher-group-page-lead {
 html.teacher-page[data-teacher-theme='light'] .teacher-header {
   background: #fff;
   border-bottom-color: #e2e8f0;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
+}
+
+html.teacher-page[data-teacher-theme='light'] .header-sync {
+  color: #6366f1;
 }
 
 html.teacher-page[data-teacher-theme='light'] .teacher-desk-tab {
-  background: #f1f5f9;
+  background: #fff;
   border-color: #e2e8f0;
   color: #475569;
 }
 
 html.teacher-page[data-teacher-theme='light'] .teacher-desk-tab:hover {
-  background: #e2e8f0;
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #334155;
 }
 
 html.teacher-page[data-teacher-theme='light'] .teacher-desk-tab.is-active {
-  background: #ede9fe;
-  border-color: #c4b5fd;
-  color: #5b21b6;
+  background: #f5f3ff;
+  border-color: #a78bfa;
+  color: #4c1d95;
 }
 
 html.teacher-page[data-teacher-theme='light'] .teacher-settings-subtab {
@@ -96,18 +103,20 @@ html.teacher-page[data-teacher-theme='light'] .teacher-group-list-row,
 html.teacher-page[data-teacher-theme='light'] .teacher-manage-row {
   background: #fff;
   border-color: #e2e8f0;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 html.teacher-page[data-teacher-theme='light'] .teacher-settings-subnav--segmented {
-  background: #f1f5f9;
-  border-color: #e2e8f0;
+  background: #eef2ff;
+  border-color: #e0e7ff;
 }
 
 html.teacher-page[data-teacher-theme='light']
   .teacher-settings-subnav--segmented
   .teacher-settings-subtab.is-active {
   background: #fff;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  border: 1px solid #e0e7ff;
+  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.12);
   color: #5b21b6;
 }
 
@@ -188,7 +197,11 @@ html.teacher-page[data-teacher-theme='light'] .insight-btn:hover {
 }
 
 html.teacher-page[data-teacher-theme='light'] .summary-num {
-  color: #0f172a;
+  color: #5b21b6;
+}
+
+html.teacher-page[data-teacher-theme='light'] .alert-card .summary-num {
+  color: #db2777;
 }
 
 html.teacher-page[data-teacher-theme='light'] .student-card {
@@ -624,4 +637,15 @@ html.teacher-page[data-teacher-theme='light'] .teacher-manage-row-meta {
 
 html.teacher-page[data-teacher-theme='light'] .teacher-settings-toggle-lbl {
   color: #334155;
+}
+
+html.teacher-page[data-teacher-theme='light'] .teacher-settings-row-title {
+  color: #0f172a;
+}
+
+html.teacher-page[data-teacher-theme='light'] .teacher-roster-input:focus,
+html.teacher-page[data-teacher-theme='light'] .broadcast-input:focus {
+  border-color: #8b5cf6;
+  outline: 2px solid rgba(139, 92, 246, 0.22);
+  outline-offset: 0;
 }

@@ -418,6 +418,73 @@ function setTeacherAccounts(obj) {
   notifyEmotionAppSync('teacher-accounts');
 }
 
+/** @returns {string} */
+function storageUidForStudentLogin(loginId) {
+  return 'local_' + String(loginId || '').trim().toLowerCase();
+}
+
+/**
+ * 학생 로컬 계정 1건과 감정 기록·JSON 명단 연동 오버레이(해당 id) 제거
+ * @returns {boolean} 계정이 있었고 삭제했으면 true
+ */
+function purgeStudentAccountStoredData(loginId) {
+  const uid = String(loginId || '')
+    .trim()
+    .toLowerCase();
+  if (!uid) return false;
+  const accounts = getLocalAccounts();
+  const acc = accounts[uid];
+  if (!acc) return false;
+  const lid = Number(acc.linkedRosterId);
+  localStorage.removeItem('emotions_' + storageUidForStudentLogin(uid));
+  localStorage.removeItem('emotions_' + uid);
+  if (!Number.isNaN(lid) && lid > 0) {
+    const byId = getRosterProfilesById();
+    const k = String(lid);
+    if (byId[k]) {
+      delete byId[k];
+      setRosterProfilesById(byId);
+    }
+  }
+  delete accounts[uid];
+  setLocalAccounts(accounts);
+  notifyEmotionAppSync('emotions');
+  notifyEmotionAppSync('profile');
+  notifyEmotionAppSync('teacher-roster');
+  return true;
+}
+
+/**
+ * 교사 로컬 계정 1건 삭제 + 이 브라우저의 학급·명단 덮어쓰기·공지 등 교사용 로컬 데이터 정리
+ * (학생 계정 emotion-checkin-accounts / 학생 감정 기록은 건드리지 않음)
+ * @returns {boolean}
+ */
+function purgeTeacherAccountStoredData(userId) {
+  const uid = String(userId || '')
+    .trim()
+    .toLowerCase();
+  if (!uid) return false;
+  const accounts = getTeacherAccounts();
+  if (!accounts[uid]) return false;
+  delete accounts[uid];
+  setTeacherAccounts(accounts);
+  clearClassRoom();
+  setTeacherHiddenJsonIds([]);
+  setTeacherCustomRoster([]);
+  clearTeacherMessage();
+  try {
+    localStorage.removeItem('emotion-checkin-teacher-user');
+  } catch (e) {}
+  try {
+    localStorage.removeItem('emotion-checkin-teacher-theme');
+  } catch (e2) {}
+  notifyEmotionAppSync('teacher-accounts');
+  notifyEmotionAppSync('class-room');
+  notifyEmotionAppSync('teacher-roster');
+  notifyEmotionAppSync('teacher-msg');
+  return true;
+}
+
 // =====================
 // 교사 명단 오버레이 (JSON 행 숨김 + 교사가 추가한 학생)
 // =====================
@@ -520,3 +587,87 @@ function removeTeacherCustomRosterRow(id) {
   const list = getTeacherCustomRoster().filter(r => r.id !== id);
   setTeacherCustomRoster(list);
 }
+
+// =====================
+// 개발·시연용 test 계정 정리 (localStorage, 페이지 로드 시 1회)
+// =====================
+
+const LS_STUDENT_SESSION_USER_KEY = 'emotion-checkin-logged-user';
+
+function isTestLikeLoginId(loginId) {
+  const id = String(loginId || '')
+    .trim()
+    .toLowerCase();
+  if (!id) return false;
+  if (id === 'test') return true;
+  if (/^test\d+$/.test(id)) return true;
+  if (id.startsWith('test_') || id.startsWith('test-') || id.startsWith('test.')) return true;
+  return false;
+}
+
+function isTestLikeDisplayName(name) {
+  const n = String(name || '')
+    .trim()
+    .toLowerCase();
+  return n === 'test' || n === '테스트';
+}
+
+function purgeTestLikeLocalAccounts() {
+  if (typeof localStorage === 'undefined') return false;
+  let changed = false;
+
+  const stu = getLocalAccounts();
+  const stuSession = (localStorage.getItem(LS_STUDENT_SESSION_USER_KEY) || '').trim().toLowerCase();
+  for (const loginId of Object.keys(stu)) {
+    const acc = stu[loginId];
+    if (!isTestLikeLoginId(loginId) && !isTestLikeDisplayName(acc && acc.name)) continue;
+    delete stu[loginId];
+    const uidKey = 'local_' + loginId;
+    localStorage.removeItem('emotions_' + uidKey);
+    localStorage.removeItem('emotions_' + loginId);
+    if (stuSession === String(loginId).trim().toLowerCase()) {
+      localStorage.removeItem(LS_STUDENT_SESSION_USER_KEY);
+      setEmotionStorageUid(null);
+    }
+    changed = true;
+  }
+  if (changed) setLocalAccounts(stu);
+
+  const tea = getTeacherAccounts();
+  const teaSession = (
+    localStorage.getItem('emotion-checkin-teacher-user') || ''
+  )
+    .trim()
+    .toLowerCase();
+  let teaChanged = false;
+  for (const userId of Object.keys(tea)) {
+    const acc = tea[userId];
+    if (!isTestLikeLoginId(userId) && !isTestLikeDisplayName(acc && acc.name)) continue;
+    delete tea[userId];
+    if (teaSession === String(userId).trim().toLowerCase()) {
+      localStorage.removeItem('emotion-checkin-teacher-user');
+    }
+    teaChanged = true;
+  }
+  if (teaChanged) setTeacherAccounts(tea);
+
+  const roster = getTeacherCustomRoster();
+  const nextRoster = roster.filter(function (r) {
+    const uid = String((r && r.userId) || '')
+      .trim()
+      .toLowerCase();
+    if (!uid) return true;
+    if (isTestLikeLoginId(uid)) return false;
+    if (isTestLikeDisplayName(r && r.name)) return false;
+    return true;
+  });
+  if (nextRoster.length !== roster.length) {
+    setTeacherCustomRoster(nextRoster);
+    changed = true;
+  }
+
+  if (changed || teaChanged) notifyEmotionAppSync('profile');
+  return changed || teaChanged;
+}
+
+purgeTestLikeLocalAccounts();

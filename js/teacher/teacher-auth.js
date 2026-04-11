@@ -4,7 +4,9 @@
 =========================== */
 
 const LS_TEACHER_SESSION_KEY = 'emotion-checkin-teacher-user';
-/** 담당 배정 교사 인증코드 (로그인·회원가입 시 필요) */
+/**
+ * 출품용 고정 인증코드. Firebase Auth·Cloud Functions 등으로 서버 검증 시 이 상수는 제거합니다.
+ */
 const TEACHER_AUTH_CODE = '5678';
 
 function validateTeacherAuthCodeInput(inputId, form) {

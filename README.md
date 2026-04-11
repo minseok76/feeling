@@ -13,21 +13,22 @@
 |------|------|
 | **학생 앱** | `index.html` — 로컬 계정 로그인, 감정 기록, 기록 목록, 통계·달력, 알림 시간·다크/라이트 테마, 학급 코드 연결 |
 | **교사 대시보드** | `teacher.html` — 교사 전용 로그인, 학생별 목록·상세, 학급 분포, 공지, 설정(테마·학급·명단) |
-| **데이터 저장** | 브라우저 **localStorage** 위주 (서버 없음). 샘플·연동용 **`data/students.json`** |
-| **동기화** | 같은 브라우저에서 학생 탭과 교사 탭을 열어두면 **저장소 이벤트 + BroadcastChannel**으로 화면이 갱신되도록 구성 |
+| **데이터 저장** | **현재:** 브라우저 **localStorage** + 시연용 **`data/students.json`**. **계획:** **Firebase**(Authentication, Firestore 등)로 계정·감정 기록·학급 정보를 서버에 두고 기기 간 동기화·백업을 구현하려 했으나, **시간 관계상** 우선 로컬만으로 완성했습니다. |
+| **동기화** | 같은 브라우저에서 학생 탭과 교사 탭을 열어두면 **저장소 이벤트 + BroadcastChannel**으로 화면이 갱신되도록 구성 (Firebase 도입 시 실시간 리스너로 대체 가능한 구조를 지향) |
 
-외부 API·Firebase 없이 **HTML / CSS / 바닐라 JavaScript**만으로 동작하며, 이후 서버·DB로 옮기기 쉽게 키 구조와 JSON 필드를 맞춰 두었습니다.
+**HTML / CSS / 바닐라 JavaScript**만으로 동작하며, 이후 Firebase·백엔드로 옮기기 쉽게 키 이름과 JSON 필드(`emo`, `label`, `note`, `date` 등)를 맞춰 두었습니다.
 
 ---
 
 ## 기술 스택
 
 - **HTML5 / CSS3 / JavaScript (ES5+ 호환 위주, 모듈 번들러 없음)**
-- **localStorage** — 학생·교사 계정, 세션, 감정 기록, 학급 방 설정, 교사 메시지 등
+- **localStorage** — 출품본: 학생·교사 계정, 세션, 감정 기록, 학급 방, 교사 메시지 등 (Firebase 연동 시 대체 예정)
 - **Web Crypto API** — 비밀번호 SHA-256 해시 (`student-accounts.js`, `teacher-auth.js`)
 - **`fetch`** — `data/students.json` 명단 로드 (`teacher-data.js`)
 - **BroadcastChannel + storage 이벤트** — 탭 간 반영 (`cross-tab.js` 등)
 - **Google Fonts** — Nunito (교사 화면)
+- **(계획)** **Firebase** — Auth·Firestore·호스팅으로 계정·데이터 영속화 및 다중 기기 지원 (시간 관계상 미연동)
 
 ---
 
@@ -40,16 +41,23 @@ emotion-checkin-app/
 ├── README.md                  # 본 문서 (공모전 제출용 개요)
 ├── .gitignore
 │
+├── scripts/
+│   └── generate-students-json.js # data/students.json 대량 샘플 재생성 (node 실행)
+│
 ├── data/
-│   └── students.json          # 샘플 학급 명단·감정 기록 (교사 화면 fetch용)
+│   └── students.json          # 학급 명단·감정 기록 샘플 (12명·약 한 달 평일 위주, 교사 화면 fetch)
 │
 ├── css/
 │   ├── style.css              # 학생 앱: 폰 목업·레이아웃·상태바
 │   ├── components.css         # 학생·공통 UI (버튼, 카드, 로그인 폼 등)
 │   ├── theme-light.css        # 학생 앱 라이트 테마
 │   ├── animations.css         # 전환·모달 등 애니메이션
-│   ├── teacher.css            # 교사 대시보드 기본(다크) 스타일
-│   └── teacher-theme-light.css # 교사 화면 라이트 테마 오버라이드
+│   ├── teacher-base.css       # 교사: 리셋·헤더·요약·목록·상세 기본
+│   ├── teacher-responsive.css # 교사: 미디어쿼리·모바일 시트
+│   ├── teacher-insight.css    # 교사: 감정 그래프·달력 모달
+│   ├── teacher-auth.css       # 교사: 로그인 게이트·헤더 액션
+│   ├── teacher-shell.css      # 교사: 탭·패널·설정·명단·학급·하단 네비
+│   └── teacher-theme-light.css # 교사 라이트 테마 오버라이드
 │
 └── js/
     ├── core/
@@ -68,14 +76,16 @@ emotion-checkin-app/
     │
     └── teacher/
         ├── teacher-app.js     # 대시보드 메인 로직, 필터, 상세 패널, 인사이트 모달
-        ├── teacher-auth.js    # 교사 로그인·가입·세션
+        ├── teacher-auth.js    # 교사 로그인·가입·세션 (출품용 고정 인증코드)
         ├── teacher-data.js    # students.json 로드·학생 목록 병합
         ├── teacher-roster.js  # 명단·수동 추가 등
-        ├── teacher-class-room.js # 학급 코드 생성·표시·인라인 스타일 보조
+        ├── teacher-class-room.js # 학급 코드 생성·카드 표시
         └── teacher-theme.js   # 교사 라이트/다크 테마 전환
 ```
 
 스크립트는 각 HTML 하단에서 **`js/core/*` → 도메인별 `js/student/*` 또는 `js/teacher/*`** 순으로 로드됩니다.
+
+`teacher.html`의 스타일은 **`teacher-base.css` → `teacher-responsive.css` → `teacher-insight.css` → `teacher-auth.css` → `teacher-shell.css` → `teacher-theme-light.css`** 순으로 로드합니다. (라이트 테마는 마지막에 덮어씀)
 
 ---
 
@@ -88,7 +98,8 @@ emotion-checkin-app/
 3. **교사**: 같은 브라우저에서 `teacher.html`을 새 탭으로 연 뒤, 교사 인증코드·계정으로 로그인 → 학생 데이터·공지·설정 확인.  
    - 학생 앱과 **동일 origin**이면 localStorage가 공유되어 연동이 됩니다.
 
-**데모용 교사 인증코드**는 `js/teacher/teacher-auth.js`에 정의되어 있으며, 기본값은 **`5678`** 입니다. (로그인·회원가입 시 동일하게 입력)
+**데모용 교사 인증코드**는 `js/teacher/teacher-auth.js`에 정의되어 있으며, 기본값은 **`5678`** 입니다. (로그인·회원가입 시 동일하게 입력)  
+Firebase Auth 등으로 전환 시 이 고정값 검증은 서버·보안 규칙으로 대체됩니다.
 
 ---
 
@@ -118,7 +129,15 @@ emotion-checkin-app/
 
 ## 제출 시 참고
 
-- 본 프로젝트는 **교육 현장 데모·프로토타입**에 맞추었으며, 실제 운영 시에는 서버 인증·개인정보 처리방침·HTTPS 등이 필요합니다.
-- `data/students.json`은 **시연용 샘플**이며, 필드 구조(`emo`, `label`, `note`, `date` 등)는 앱 내부 저장 형식과 맞춰져 있습니다.
+- 본 프로젝트는 **교육 현장 데모·프로토타입**입니다. **데이터는 출품 범위상 localStorage에만** 두었으며, **원래는 Firebase로 영속화·다기기 동기화**를 염두에 두고 설계했습니다.
+- 실제 운영 시에는 **Firebase 또는 자체 서버**에서 인증·저장소·HTTPS·개인정보 처리방침을 갖추는 것이 필요합니다.
+- `data/students.json`은 **시연용 샘플**이며, 필드 구조는 앱 내부 저장 형식과 맞춰져 있습니다.
 
 문의·버전 정보는 교사 설정 화면의 앱 정보 영역을 참고하면 됩니다.
+
+---
+
+## 향후 확장 메모
+
+- **Firebase**: Firestore에 `users` / `emotions` / `classRooms` 컬렉션 등으로 옮기고, 클라이언트는 SDK로 구독·쓰기만 하도록 바꾸면 됩니다.
+- **교사 인증코드**: 출품용으로 클라이언트에만 두었습니다. Firebase Auth의 Custom Claims·Cloud Functions로 검증하는 방식이 적합합니다.

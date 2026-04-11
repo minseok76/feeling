@@ -15,7 +15,11 @@
     })();
   </script>
   <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/teacher.css">
+  <link rel="stylesheet" href="css/teacher-base.css">
+  <link rel="stylesheet" href="css/teacher-responsive.css">
+  <link rel="stylesheet" href="css/teacher-insight.css">
+  <link rel="stylesheet" href="css/teacher-auth.css">
+  <link rel="stylesheet" href="css/teacher-shell.css">
   <link rel="stylesheet" href="css/teacher-theme-light.css">
 </head>
 <body class="teacher-body">
@@ -223,7 +227,6 @@
         <div class="teacher-settings-subpanel is-active" data-settings-panel="app" id="teacher-settings-panel-app">
           <div class="teacher-settings-card teacher-settings-card--spacious">
             <p class="teacher-settings-row-title">화면 모드</p>
-            <p class="teacher-settings-sub">다크 모드를 끄면 밝은 테마로 바뀌어요.</p>
             <div class="teacher-settings-toggle-row">
               <span class="teacher-settings-toggle-lbl">다크 모드</span>
               <div class="toggle on" id="teacher-settings-dark-toggle" role="switch" aria-checked="true" aria-label="다크 모드"></div>
@@ -232,6 +235,11 @@
           <div class="teacher-settings-card teacher-settings-card--spacious">
             <p class="teacher-settings-row-title">계정</p>
             <button type="button" class="broadcast-btn ghost teacher-settings-fullbtn" id="teacher-settings-logout">로그아웃</button>
+            <p class="teacher-settings-sub" style="margin-top:16px;">계정을 지우면 이 브라우저의 <strong>교사 계정·학급·명단 수정·공지</strong>가 함께 없어져요. 학생 앱의 다른 학생 계정·기록은 그대로예요.</p>
+            <label class="teacher-roster-label" for="teacher-delete-account-password" style="margin-top:12px;">비밀번호 확인</label>
+            <input type="password" class="teacher-roster-input" id="teacher-delete-account-password" autocomplete="current-password" placeholder="현재 비밀번호" style="max-width:320px;">
+            <button type="button" class="broadcast-btn ghost teacher-settings-fullbtn" id="teacher-delete-account-btn" style="margin-top:12px;border-color:#f87171;color:#fca5a5;">교사 계정 영구 삭제</button>
+            <p id="teacher-delete-account-msg" class="teacher-auth-msg teacher-auth-msg--error" style="margin-top:10px;"></p>
           </div>
           <div class="teacher-settings-card teacher-settings-card--spacious">
             <p class="teacher-settings-row-title">앱</p>

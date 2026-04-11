@@ -197,6 +197,46 @@ html[data-theme="light"] .name-input {
   color: #1e293b;
 }
 
+html[data-theme="light"] .remind-time-block {
+  border-top-color: #e2e8f0;
+}
+
+html[data-theme="light"] .remind-time-block__label {
+  color: #475569;
+}
+
+html[data-theme="light"] .remind-time-block__badge {
+  background: linear-gradient(180deg, #f5f3ff, #ede9fe);
+  color: #5b21b6;
+  border-color: #c4b5fd;
+}
+
+html[data-theme="light"] .remind-time-input.name-input {
+  background: #fff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  color-scheme: light;
+}
+
+html[data-theme="light"] .remind-time-input.name-input:hover:not(:disabled) {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+html[data-theme="light"] .remind-time-input.name-input:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.22);
+}
+
+html[data-theme="light"] .remind-time-input.name-input::-webkit-calendar-picker-indicator {
+  filter: none;
+  opacity: 1;
+}
+
+html[data-theme="light"] .remind-time-input.name-input:hover:not(:disabled)::-webkit-calendar-picker-indicator {
+  background: rgba(139, 92, 246, 0.12);
+}
+
 html[data-theme="light"] .teacher-banner-inner {
   background: linear-gradient(135deg, #f5f3ff, #ede9fe);
   border-color: #c4b5fd;

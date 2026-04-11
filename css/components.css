@@ -626,6 +626,89 @@
   cursor: not-allowed;
 }
 
+/* 설정 — 매일 알림 시각 (type=time) */
+.remind-time-block {
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid #252535;
+}
+
+.remind-time-block__label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #b8b8cc;
+  font-family: 'Nunito', sans-serif;
+}
+
+.remind-time-block__badge {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 4px 9px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #2a2438, #1e1a2e);
+  color: #ddd6fe;
+  border: 1px solid #a78bfa55;
+}
+
+.remind-time-block--off {
+  opacity: 0.72;
+}
+
+.remind-time-block--off .remind-time-block__badge {
+  opacity: 0.75;
+}
+
+.remind-time-input.name-input {
+  width: 100%;
+  max-width: none;
+  min-height: 48px;
+  padding: 12px 16px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  border-radius: 14px;
+  border-width: 2px;
+  border-color: #3d3d52;
+  text-align: center;
+  box-sizing: border-box;
+  color-scheme: dark;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.remind-time-input.name-input:hover:not(:disabled) {
+  border-color: #5b5b72;
+  background: #2a2a38;
+}
+
+.remind-time-input.name-input:focus {
+  border-color: #a78bfa;
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.28);
+}
+
+.remind-time-input.name-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.9;
+  padding: 4px;
+  margin-left: 4px;
+  border-radius: 8px;
+  filter: invert(0.88) brightness(1.15);
+}
+
+.remind-time-input.name-input:hover:not(:disabled)::-webkit-calendar-picker-indicator {
+  background: rgba(167, 139, 250, 0.2);
+}
+
 .profile-guard-field:disabled {
   opacity: 0.55;
   cursor: not-allowed;

@@ -116,6 +116,7 @@ function clearSession() {
   currentLoginId = null;
   currentUserProfile = null;
   localStorage.removeItem(LS_SESSION_USER_KEY);
+  localStorage.removeItem('emotion-checkin-user-name');
   clearSessionExtras();
   setEmotionStorageUid(null);
   notifyEmotionAppSync('profile');
@@ -196,9 +197,9 @@ function wireAuthForms() {
       setAuthError('auth-error-signup', '');
       const res = await createStudentLoginAccount({
         name: document.getElementById('signup-name').value,
-        gradeLabel: document.getElementById('signup-grade').value,
-        classLabel: document.getElementById('signup-class').value,
-        studentNumber: document.getElementById('signup-student-number').value,
+        gradeLabel: '',
+        classLabel: '',
+        studentNumber: '',
         userId: document.getElementById('signup-userid').value,
         password: document.getElementById('signup-password').value,
         password2: document.getElementById('signup-password2').value,
@@ -230,6 +231,58 @@ function wireAuthForms() {
   }
 }
 
+function wireDeleteStudentAccount() {
+  const btn = document.getElementById('settings-delete-account-btn');
+  const pw = document.getElementById('settings-delete-account-password');
+  const msg = document.getElementById('settings-delete-account-msg');
+  if (!btn || !pw) return;
+  btn.addEventListener('click', async function () {
+    if (msg) msg.textContent = '';
+    const loginId =
+      (typeof currentLoginId === 'string' && currentLoginId) ||
+      (localStorage.getItem(LS_SESSION_USER_KEY) || '').trim();
+    if (!loginId) return;
+    const accounts = getAccounts();
+    const acc = accounts[loginId];
+    if (!acc) {
+      if (msg) msg.textContent = '로그인된 계정을 찾을 수 없어요.';
+      return;
+    }
+    if (
+      !confirm(
+        '이 기기에서 계정과 감정 기록을 모두 삭제할까요? 되돌릴 수 없어요.'
+      )
+    ) {
+      return;
+    }
+    if (!confirm('정말 삭제할까요? 마지막 확인이에요.')) return;
+    const h = await hashPassword(pw.value);
+    if (h !== acc.passwordHash) {
+      if (msg) msg.textContent = '비밀번호가 맞지 않아요.';
+      return;
+    }
+    if (typeof purgeStudentAccountStoredData === 'function') {
+      purgeStudentAccountStoredData(loginId);
+    }
+    if (typeof clearStudentLinkedClassCode === 'function') {
+      clearStudentLinkedClassCode();
+    }
+    pw.value = '';
+    clearSession();
+    showAuthGate();
+    setStudentAuthTab('login');
+    if (typeof updateStudentClassLinkUiAll === 'function') {
+      updateStudentClassLinkUiAll();
+    }
+    const globalHint = document.getElementById('auth-error-global');
+    if (globalHint) {
+      globalHint.textContent =
+        '계정이 삭제되었어요. 필요하면 다시 가입할 수 있어요.';
+      globalHint.classList.remove('auth-msg--error');
+    }
+  });
+}
+
 window.signOutStudent = function () {
   clearSession();
   showAuthGate();
@@ -240,9 +293,13 @@ window.signOutStudent = function () {
 
 document.addEventListener('DOMContentLoaded', function () {
   const globalErr = document.getElementById('auth-error-global');
-  if (globalErr) globalErr.textContent = '';
+  if (globalErr) {
+    globalErr.textContent = '';
+    globalErr.classList.add('auth-msg--error');
+  }
 
   wireAuthForms();
+  wireDeleteStudentAccount();
 
   const saved = localStorage.getItem(LS_SESSION_USER_KEY);
   if (saved && applySession(saved)) {

@@ -3,7 +3,7 @@
 
    반 명단: data/students.json (단일 소스)
    DATA_MODE:
-     • hybrid — JSON 명단 + 설정 이름과 같은 학생은 학생 앱 localStorage 기록으로 교체
+     • hybrid — JSON(·교사 수동 명단)에 있는 학생만 표시. userId·이름·번호로 매칭되면 해당 행에 감정 기록 병합. 명단에 없는 로컬 가입 학생은 표시하지 않음
      • mock   — JSON 명단만
      • local  — 로컬 기록 한 명만
 
@@ -191,21 +191,6 @@ async function buildHybridStudents() {
 
   if (idx >= 0) {
     base[idx] = { ...base[idx], emotions: mapped };
-  } else if (mapped.length > 0 || localName || localNum || loginId) {
-    base.unshift({
-      id: LOCAL_STUDENT_ID,
-      name: localName || '이 PC 학생',
-      number: localNum || '연동',
-      gradeLabel:
-        (typeof localStorage !== 'undefined' &&
-          localStorage.getItem('emotion-checkin-grade-label')) ||
-        '',
-      classLabel:
-        (typeof localStorage !== 'undefined' &&
-          localStorage.getItem('emotion-checkin-class-label')) ||
-        '',
-      emotions: mapped
-    });
   }
 
   return base;

@@ -64,7 +64,7 @@ function renderTodayCard() {
 
 function applyRemindSettingsToDom() {
   const input = document.getElementById('settings-remind-time');
-  const summary = document.getElementById('settings-remind-summary');
+  const wrap = document.getElementById('settings-remind-time-wrap');
   const toggle = document.getElementById('t-notify');
   const hhmm =
     typeof getRemindTimeHHmm === 'function' ? getRemindTimeHHmm() : '09:00';
@@ -74,10 +74,9 @@ function applyRemindSettingsToDom() {
     input.disabled = !on;
     input.setAttribute('aria-disabled', on ? 'false' : 'true');
   }
-  if (summary) {
-    summary.textContent = on
-      ? '매일 ' + hhmm + ' (24시간 형식)에 맞춰 두었어요.'
-      : '알림이 꺼져 있어요. 켜면 매일 ' + hhmm + ' 기준으로 표시돼요.';
+  if (wrap) {
+    wrap.classList.toggle('remind-time-block--off', !on);
+    wrap.setAttribute('aria-disabled', on ? 'false' : 'true');
   }
   if (toggle) {
     toggle.classList.toggle('on', on);

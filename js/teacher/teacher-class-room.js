@@ -16,94 +16,6 @@ function setTeacherClassMsg(elId, msg, isError) {
   el.classList.toggle('teacher-auth-msg--error', !!isError);
 }
 
-/** 일부 환경에서 글자색이 검정으로 덮이는 문제 대비 — 인라인 !important */
-function applyTeacherClassRoomActiveInline() {
-  const activeWrap = document.getElementById('teacher-class-room-active');
-  if (!activeWrap) return;
-  const room = typeof getClassRoom === 'function' ? getClassRoom() : null;
-  if (!room) return;
-
-  const isLight =
-    document.documentElement.getAttribute('data-teacher-theme') === 'light';
-
-  function imp(el, prop, val) {
-    if (!el) return;
-    el.style.setProperty(prop, val, 'important');
-  }
-
-  const line = activeWrap.querySelector('.teacher-class-room-line');
-  const ks = activeWrap.querySelectorAll('.teacher-class-room-k');
-  const nameEl = document.getElementById('teacher-class-room-name');
-  const codeEl = document.getElementById('teacher-class-room-code');
-  const codeInner = codeEl ? codeEl.querySelector('.teacher-class-code-text') : null;
-
-  if (isLight) {
-    imp(activeWrap, 'color', '#0f172a');
-    imp(line, 'color', '#0f172a');
-    imp(line, '-webkit-text-fill-color', '#0f172a');
-    ks.forEach(function (el) {
-      imp(el, 'color', '#64748b');
-      imp(el, '-webkit-text-fill-color', '#64748b');
-    });
-    imp(nameEl, 'color', '#0f172a');
-    imp(nameEl, '-webkit-text-fill-color', '#0f172a');
-    imp(codeEl, 'color', '#5b21b6');
-    imp(codeEl, '-webkit-text-fill-color', '#5b21b6');
-    imp(codeEl, 'background-color', '#f5f3ff');
-    imp(codeEl, 'border-color', '#c4b5fd');
-    imp(codeInner, 'color', '#5b21b6');
-    imp(codeInner, '-webkit-text-fill-color', '#5b21b6');
-  } else {
-    imp(activeWrap, 'color', '#f9fafb');
-    imp(line, 'color', '#f9fafb');
-    imp(line, '-webkit-text-fill-color', '#f9fafb');
-    ks.forEach(function (el) {
-      imp(el, 'color', '#e5e7eb');
-      imp(el, '-webkit-text-fill-color', '#e5e7eb');
-    });
-    imp(nameEl, 'color', '#ffffff');
-    imp(nameEl, '-webkit-text-fill-color', '#ffffff');
-    imp(codeEl, 'color', '#fffbeb');
-    imp(codeEl, '-webkit-text-fill-color', '#fffbeb');
-    imp(codeEl, 'background-color', '#1e1b4b');
-    imp(codeEl, 'border-color', '#818cf8');
-    imp(codeInner, 'color', '#fffbeb');
-    imp(codeInner, '-webkit-text-fill-color', '#fffbeb');
-  }
-}
-
-function clearTeacherClassRoomActiveInline() {
-  const activeWrap = document.getElementById('teacher-class-room-active');
-  if (!activeWrap) return;
-  activeWrap.style.removeProperty('color');
-  const line = activeWrap.querySelector('.teacher-class-room-line');
-  if (line) {
-    line.style.removeProperty('color');
-    line.style.removeProperty('-webkit-text-fill-color');
-  }
-  activeWrap.querySelectorAll('.teacher-class-room-k').forEach(function (el) {
-    el.style.removeProperty('color');
-    el.style.removeProperty('-webkit-text-fill-color');
-  });
-  const nameEl = document.getElementById('teacher-class-room-name');
-  if (nameEl) {
-    nameEl.style.removeProperty('color');
-    nameEl.style.removeProperty('-webkit-text-fill-color');
-  }
-  const codeEl = document.getElementById('teacher-class-room-code');
-  if (codeEl) {
-    codeEl.style.removeProperty('color');
-    codeEl.style.removeProperty('-webkit-text-fill-color');
-    codeEl.style.removeProperty('background-color');
-    codeEl.style.removeProperty('border-color');
-    const inner = codeEl.querySelector('.teacher-class-code-text');
-    if (inner) {
-      inner.style.removeProperty('color');
-      inner.style.removeProperty('-webkit-text-fill-color');
-    }
-  }
-}
-
 function renderTeacherClassRoomCard() {
   const room = typeof getClassRoom === 'function' ? getClassRoom() : null;
   const createWrap = document.getElementById('teacher-class-room-create');
@@ -123,14 +35,9 @@ function renderTeacherClassRoomCard() {
       span.textContent = room.code;
       codeEl.appendChild(span);
     }
-    applyTeacherClassRoomActiveInline();
-    requestAnimationFrame(function () {
-      applyTeacherClassRoomActiveInline();
-    });
   } else {
     createWrap.style.display = 'block';
     activeWrap.style.display = 'none';
-    clearTeacherClassRoomActiveInline();
   }
   setTeacherClassMsg('teacher-class-room-msg', '', false);
   if (typeof window.updateTeacherRosterClassPageTitle === 'function') {

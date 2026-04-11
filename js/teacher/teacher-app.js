@@ -100,6 +100,42 @@ async function initTeacherDashboard() {
     });
   }
 
+  const delBtn = document.getElementById('teacher-delete-account-btn');
+  const delPw = document.getElementById('teacher-delete-account-password');
+  const delMsg = document.getElementById('teacher-delete-account-msg');
+  if (
+    delBtn &&
+    delPw &&
+    typeof getValidTeacherSessionId === 'function' &&
+    typeof teacherAccounts === 'function' &&
+    typeof hashTeacherPassword === 'function' &&
+    typeof purgeTeacherAccountStoredData === 'function'
+  ) {
+    delBtn.addEventListener('click', async function () {
+      if (delMsg) delMsg.textContent = '';
+      const userId = getValidTeacherSessionId();
+      if (!userId) return;
+      const acc = teacherAccounts()[userId];
+      if (!acc) return;
+      if (
+        !confirm(
+          '교사 계정과 이 기기의 학급·명단 설정·공지를 모두 삭제할까요? 되돌릴 수 없어요.'
+        )
+      ) {
+        return;
+      }
+      if (!confirm('정말 삭제할까요? 마지막 확인이에요.')) return;
+      const h = await hashTeacherPassword(delPw.value);
+      if (h !== acc.passwordHash) {
+        if (delMsg) delMsg.textContent = '비밀번호가 맞지 않아요.';
+        return;
+      }
+      purgeTeacherAccountStoredData(userId);
+      delPw.value = '';
+      location.reload();
+    });
+  }
+
   window.addEventListener('resize', function () {
     if (!window.matchMedia('(max-width: 900px)').matches) {
       const panel = document.getElementById('detail-panel');

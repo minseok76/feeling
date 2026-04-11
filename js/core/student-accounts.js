@@ -97,11 +97,11 @@ async function createStudentLoginAccount(params) {
   if (name.length < 1 || name.length > 30) {
     return { ok: false, error: '이름은 1~30자로 입력해 주세요.' };
   }
-  if (studentNumber.length < 1 || studentNumber.length > 20) {
-    return { ok: false, error: '번호(자리·출석번호)를 입력해 주세요. (1~20자)' };
+  if (studentNumber.length > 20) {
+    return { ok: false, error: '번호는 20자 이하여야 해요.' };
   }
-  if (!gradeLabel || !classLabel) {
-    return { ok: false, error: '학년과 반을 입력해 주세요.' };
+  if (gradeLabel.length > 40 || classLabel.length > 20) {
+    return { ok: false, error: '학년·반 입력 길이를 줄여 주세요.' };
   }
   if (password.length < 6) {
     return { ok: false, error: '비밀번호는 6자 이상이에요.' };
@@ -127,22 +127,7 @@ async function createStudentLoginAccount(params) {
   };
   accounts[userId] = profile;
   setLocalAccounts(accounts);
-  const linkedId = await linkStudentLoginToJsonRoster(userId, profile);
-  if (linkedId == null && typeof getTeacherCustomRoster === 'function' && typeof addTeacherCustomRosterRow === 'function') {
-    const custom = getTeacherCustomRoster();
-    const exists = custom.some(
-      r => String(r.userId || '').trim().toLowerCase() === userId
-    );
-    if (!exists) {
-      addTeacherCustomRosterRow({
-        userId,
-        name,
-        number: studentNumber,
-        gradeLabel,
-        classLabel,
-      });
-    }
-  }
+  await linkStudentLoginToJsonRoster(userId, profile);
   if (typeof notifyEmotionAppSync === 'function') notifyEmotionAppSync('profile');
   return { ok: true };
 }

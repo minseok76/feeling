@@ -74,6 +74,7 @@ function showTeacherAppShell() {
   if (gate) gate.style.display = 'none';
   if (shell) shell.style.display = 'block';
   refreshTeacherSessionLabel();
+  if (typeof updateTeacherHeaderClassLabel === 'function') updateTeacherHeaderClassLabel();
 }
 
 function refreshTeacherSessionLabel() {

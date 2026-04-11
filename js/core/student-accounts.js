@@ -1,6 +1,6 @@
 /* ===========================
    로컬 학생 계정 (비밀번호 해시·검증·JSON 명단 연동)
-   학생 앱 로그인(auth.js)과 교사 화면의 계정 생성에서 공통 사용
+   학생 앱 회원가입·로그인(auth.js)과 교사 화면 계정 생성에서 공통 사용
 =========================== */
 
 function normalizeUserId(userId) {
@@ -76,7 +76,7 @@ async function linkStudentLoginToJsonRoster(userId, accOrProfile) {
 }
 
 /**
- * 교사 화면에서 학생 로그인 계정 생성
+ * 학생 로그인 계정 생성 (학생 앱 회원가입·교사 설정 공통)
  * @returns {Promise<{ ok: boolean, error?: string }>}
  */
 async function createStudentLoginAccount(params) {
@@ -97,7 +97,7 @@ async function createStudentLoginAccount(params) {
     return { ok: false, error: '이름은 1~30자로 입력해 주세요.' };
   }
   if (studentNumber.length < 1 || studentNumber.length > 20) {
-    return { ok: false, error: '학번을 입력해 주세요. (1~20자)' };
+    return { ok: false, error: '번호(자리·출석번호)를 입력해 주세요. (1~20자)' };
   }
   if (!gradeLabel || !classLabel) {
     return { ok: false, error: '학년과 반을 입력해 주세요.' };

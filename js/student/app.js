@@ -22,8 +22,6 @@ function showScreen(id) {
   // 통계 화면 열 때 차트 다시 그리기
   if (id === 'stat') renderStats();
   if (id === 'home' && typeof renderTeacherBanner === 'function') renderTeacherBanner();
-  if (id !== 'set' && typeof lockStudentProfileFields === 'function')
-    lockStudentProfileFields();
 }
 
 // 로그인 직후 (auth.js에서 호출)
@@ -82,13 +80,18 @@ function setupStudentSync() {
       e.key === 'emotion-checkin-accounts' ||
       e.key === 'emotion-checkin-student-number' ||
       e.key === 'emotion-checkin-grade-label' ||
-      e.key === 'emotion-checkin-class-label'
+      e.key === 'emotion-checkin-class-label' ||
+      e.key === 'emotion-checkin-class-room' ||
+      e.key === 'emotion-checkin-student-linked-class-code'
     ) {
       if (
         e.key === 'emotion-checkin-accounts' ||
         e.key === 'emotion-checkin-roster-profiles'
       )
         syncProfileUiFromAccounts();
+      if (typeof window.updateStudentClassLinkUiAll === 'function') {
+        window.updateStudentClassLinkUiAll();
+      }
       renderAll();
     }
   });
@@ -97,7 +100,12 @@ function setupStudentSync() {
     ch.onmessage = function (ev) {
       const k = ev.data && ev.data.kind;
       if (k === 'teacher-msg') renderTeacherBanner();
-      else if (k === 'emotions' || k === 'profile') {
+      else if (k === 'class-room') {
+        if (typeof window.updateStudentClassLinkUiAll === 'function') {
+          window.updateStudentClassLinkUiAll();
+        }
+        renderAll();
+      } else if (k === 'emotions' || k === 'profile') {
         if (k === 'profile') syncProfileUiFromAccounts();
         renderAll();
       }

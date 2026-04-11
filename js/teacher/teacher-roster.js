@@ -132,7 +132,7 @@ function renderTeacherManageList(students) {
 
   if (!students || students.length === 0) {
     wrap.innerHTML =
-      '<p class="teacher-manage-empty">등록된 학생이 없어요. 위 양식에서 추가하거나 data/students.json 명단을 확인하세요. 로그인만 쓰게 하려면 <strong>학생 계정</strong> 탭을 이용해 주세요.</p>';
+      '<p class="teacher-manage-empty">등록된 학생이 없어요. 위 양식에서 추가하거나 data/students.json 명단을 확인하세요. 로그인만 쓰게 하려면 <strong>학생 계정 생성</strong> 탭을 이용해 주세요.</p>';
     return;
   }
 
@@ -144,9 +144,7 @@ function renderTeacherManageList(students) {
     const row = document.createElement('div');
     row.className = 'teacher-manage-row';
     const custom = isTeacherCustomStudentId(s.id);
-    const badge = custom
-      ? '<span class="teacher-manage-badge teacher-manage-badge--custom">교사 추가</span>'
-      : '<span class="teacher-manage-badge">명단</span>';
+    const badge = '<span class="teacher-manage-badge">명단</span>';
     const uid = (s.userId || '').trim();
     row.innerHTML = `
       <div class="teacher-manage-row-main">
@@ -156,7 +154,7 @@ function renderTeacherManageList(students) {
       </div>
       <div class="teacher-manage-row-actions">
         <button type="button" class="teacher-manage-action" data-action="edit">수정</button>
-        <button type="button" class="teacher-manage-action teacher-manage-action--danger" data-action="remove">${custom ? '삭제' : '목록 숨김'}</button>
+        <button type="button" class="teacher-manage-action teacher-manage-action--danger" data-action="remove">삭제</button>
       </div>
     `;
     const id = s.id;
@@ -230,6 +228,14 @@ function initTeacherStudentAccountForm() {
   });
 }
 
+function updateTeacherRosterClassPageTitle() {
+  const el = document.getElementById('teacher-roster-class-page-title');
+  if (!el) return;
+  const room = typeof getClassRoom === 'function' ? getClassRoom() : null;
+  const name = room && room.name ? String(room.name).trim() : '';
+  el.textContent = name || '학급 미설정';
+}
+
 function initTeacherRosterPanel() {
   const form = document.getElementById('teacher-roster-form');
   if (form) {
@@ -245,4 +251,7 @@ function initTeacherRosterPanel() {
     });
   }
   initTeacherStudentAccountForm();
+  updateTeacherRosterClassPageTitle();
 }
+
+window.updateTeacherRosterClassPageTitle = updateTeacherRosterClassPageTitle;

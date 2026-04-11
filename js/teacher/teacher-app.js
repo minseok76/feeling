@@ -5,6 +5,15 @@
 
 const DAY_KR = ['일', '월', '화', '수', '목', '금', '토'];
 
+/** 학급 전체 보기: 오늘 기분 분포 차트용 (앱 체크인 이모지와 동일) */
+const TEACHER_CLASS_EMOTION_ROWS = [
+  { emo: '😊', label: '기분 좋음' },
+  { emo: '😐', label: '보통' },
+  { emo: '😢', label: '슬픔' },
+  { emo: '😡', label: '화남' },
+  { emo: '😴', label: '피곤함' },
+];
+
 let allStudents = [];       // 전체 학생 데이터
 let selectedStudentId = null; // 현재 선택된 학생 ID
 
@@ -19,7 +28,9 @@ async function initTeacherDashboard() {
 
   if (typeof initTeacherTheme === 'function') initTeacherTheme();
   if (typeof initTeacherRosterPanel === 'function') initTeacherRosterPanel();
+  if (typeof initTeacherClassRoomPanel === 'function') initTeacherClassRoomPanel();
   if (typeof wireTeacherSettingsSubnav === 'function') wireTeacherSettingsSubnav();
+  if (typeof wireTeacherRosterSubnav === 'function') wireTeacherRosterSubnav();
 
   const d = new Date();
   document.getElementById('today-date').textContent =
@@ -135,8 +146,12 @@ function setupTeacherSync() {
       e.key === 'emotion-checkin-grade-label' ||
       e.key === 'emotion-checkin-class-label' ||
       e.key === 'emotion-checkin-teacher-custom-roster' ||
-      e.key === 'emotion-checkin-teacher-hidden-json-ids'
+      e.key === 'emotion-checkin-teacher-hidden-json-ids' ||
+      e.key === 'emotion-checkin-class-room' ||
+      e.key === 'emotion-checkin-student-linked-class-code'
     ) {
+      if (typeof renderTeacherClassRoomCard === 'function') renderTeacherClassRoomCard();
+      if (typeof updateTeacherHeaderClassLabel === 'function') updateTeacherHeaderClassLabel();
       void refreshDashboard();
     }
   });
@@ -145,6 +160,11 @@ function setupTeacherSync() {
     ch.onmessage = function (ev) {
       const k = ev.data && ev.data.kind;
       if (k === 'teacher-msg') return;
+      if (k === 'class-room') {
+        if (typeof renderTeacherClassRoomCard === 'function') renderTeacherClassRoomCard();
+        if (typeof updateTeacherHeaderClassLabel === 'function') updateTeacherHeaderClassLabel();
+        return;
+      }
       void refreshDashboard();
     };
   } catch (e) {}
@@ -249,6 +269,21 @@ function showTeacherView(view) {
   }
 }
 
+let lastTeacherRosterSub = 'class-room';
+
+function showTeacherRosterSub(sub) {
+  const key = sub || lastTeacherRosterSub || 'class-room';
+  lastTeacherRosterSub = key;
+  document.querySelectorAll('[data-roster-sub]').forEach(function (btn) {
+    const on = btn.getAttribute('data-roster-sub') === key;
+    btn.classList.toggle('is-active', on);
+  });
+  document.querySelectorAll('[data-roster-panel]').forEach(function (panel) {
+    const on = panel.getAttribute('data-roster-panel') === key;
+    panel.classList.toggle('is-active', on);
+  });
+}
+
 function showTeacherSettingsSub(sub) {
   const key = sub || 'app';
   document.querySelectorAll('[data-settings-sub]').forEach(function (btn) {
@@ -258,6 +293,20 @@ function showTeacherSettingsSub(sub) {
   document.querySelectorAll('[data-settings-panel]').forEach(function (panel) {
     const on = panel.getAttribute('data-settings-panel') === key;
     panel.classList.toggle('is-active', on);
+  });
+  if (key === 'roster') {
+    showTeacherRosterSub(lastTeacherRosterSub);
+  }
+}
+
+function wireTeacherRosterSubnav() {
+  document.querySelectorAll('[data-roster-sub]').forEach(function (btn) {
+    if (btn.dataset.rosterSubWired === '1') return;
+    btn.dataset.rosterSubWired = '1';
+    btn.addEventListener('click', function () {
+      const k = btn.getAttribute('data-roster-sub');
+      if (k) showTeacherRosterSub(k);
+    });
   });
 }
 
@@ -283,31 +332,93 @@ function wireTeacherTabNavigation() {
   showTeacherView('individual');
 }
 
-function renderTeacherGroupGrid() {
-  const grid = document.getElementById('teacher-group-grid');
-  if (!grid) return;
-  grid.innerHTML = '';
+function countTodayClassEmotions(students) {
+  const counts = { none: 0, other: 0 };
+  TEACHER_CLASS_EMOTION_ROWS.forEach(function (row) {
+    counts[row.emo] = 0;
+  });
+  (students || []).forEach(function (s) {
+    if (!hasTodayRecord(s)) {
+      counts.none++;
+      return;
+    }
+    const e = s.emotions[0].emo;
+    if (counts[e] !== undefined) counts[e]++;
+    else counts.other++;
+  });
+  return counts;
+}
+
+function renderTeacherGroupChart() {
+  const wrap = document.getElementById('teacher-group-chart');
+  if (!wrap) return;
+  wrap.innerHTML = '';
 
   if (!allStudents || allStudents.length === 0) {
-    grid.innerHTML =
-      '<p class="teacher-group-empty">학생이 없어요. 설정의 명단 관리·학생 계정에서 추가하거나 data/students.json 명단을 확인하세요.</p>';
+    wrap.innerHTML =
+      '<p class="teacher-group-empty">학생이 없어요. 설정의 <strong>명단 관리</strong>(명단·학생 계정 생성)에서 추가하거나 data/students.json 명단을 확인하세요.</p>';
     return;
   }
 
-  allStudents.forEach(function (s) {
+  const counts = countTodayClassEmotions(allStudents);
+  const total = allStudents.length;
+  const rows = TEACHER_CLASS_EMOTION_ROWS.map(function (row) {
+    return { emoji: row.emo, label: row.label, n: counts[row.emo] || 0 };
+  });
+  rows.push({ emoji: '❓', label: '미기록', n: counts.none || 0 });
+  if (counts.other > 0) {
+    rows.push({ emoji: '…', label: '기타', n: counts.other });
+  }
+
+  rows.forEach(function (row) {
+    const pct = total ? Math.round((row.n / total) * 100) : 0;
+    const barW = row.n === 0 ? 0 : Math.max(pct, 6);
+    const rowEl = document.createElement('div');
+    rowEl.className = 'teacher-group-chart-row';
+    rowEl.innerHTML = `
+      <div class="teacher-group-chart-meta">
+        <span class="teacher-group-chart-emo" aria-hidden="true">${row.emoji}</span>
+        <span class="teacher-group-chart-label">${escTeacherListText(row.label)}</span>
+      </div>
+      <div class="teacher-group-chart-bar-wrap" role="presentation">
+        <div class="teacher-group-chart-bar-fill" style="width:${barW}%"></div>
+      </div>
+      <div class="teacher-group-chart-count">${row.n}명 <span class="teacher-group-chart-pct">(${pct}%)</span></div>
+    `;
+    wrap.appendChild(rowEl);
+  });
+}
+
+function renderTeacherGroupStudentRows() {
+  const list = document.getElementById('teacher-group-list');
+  if (!list) return;
+  list.innerHTML = '';
+
+  if (!allStudents || allStudents.length === 0) {
+    return;
+  }
+
+  const sorted = [...allStudents].sort(function (a, b) {
+    return String(a.name).localeCompare(String(b.name), 'ko');
+  });
+
+  sorted.forEach(function (s) {
     const hasToday = hasTodayRecord(s);
     const emo = hasToday ? s.emotions[0].emo : '❓';
     const label = hasToday ? s.emotions[0].label : '미기록';
-    const card = document.createElement('button');
-    card.type = 'button';
-    card.className = 'teacher-group-card' + (isAlertStudent(s) ? ' teacher-group-card--alert' : '');
-    card.innerHTML = `
-      <span class="teacher-group-card-emo">${emo}</span>
-      <span class="teacher-group-card-name">${escTeacherListText(s.name)}</span>
-      <span class="teacher-group-card-sub">${escTeacherListText(label)}</span>
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className =
+      'teacher-group-list-row' + (isAlertStudent(s) ? ' teacher-group-list-row--alert' : '');
+    row.setAttribute('role', 'listitem');
+    row.innerHTML = `
+      <span class="teacher-group-list-name">${escTeacherListText(s.name)}</span>
+      <span class="teacher-group-list-num">${escTeacherListText(String(s.number || ''))}</span>
+      <span class="teacher-group-list-emo" aria-hidden="true">${emo}</span>
+      <span class="teacher-group-list-lbl">${escTeacherListText(label)}</span>
     `;
     const sid = s.id;
-    card.addEventListener('click', function () {
+    row.addEventListener('click', function () {
       showTeacherView('individual');
       let listed = null;
       document.querySelectorAll('.student-card[data-student-id]').forEach(function (c) {
@@ -315,8 +426,13 @@ function renderTeacherGroupGrid() {
       });
       selectStudent(sid, listed);
     });
-    grid.appendChild(card);
+    list.appendChild(row);
   });
+}
+
+function renderTeacherGroupGrid() {
+  renderTeacherGroupChart();
+  renderTeacherGroupStudentRows();
 }
 
 // =====================
@@ -381,7 +497,7 @@ function renderStudentList(students) {
       card.innerHTML = `
         <div class="s-emo">${todayEmo}</div>
         <div class="s-info">
-          <p class="s-name">${escTeacherListText(student.name)} <span style="color:#555;font-weight:400;font-size:12px;">${escTeacherListText(String(student.number || ''))}</span></p>
+          <p class="s-name">${escTeacherListText(student.name)} <span class="s-name-meta">${escTeacherListText(String(student.number || ''))}</span></p>
           <p class="s-sub">${escTeacherListText(todayLabel)}</p>
         </div>
         ${isAlert ? '<span class="s-alert" title="관심 필요">🔴</span>' : ''}
@@ -600,15 +716,29 @@ function formatDateTeacher(isoString) {
 // 감정 그래프·달력 모달
 // =====================
 
-const INSIGHT_EMO_COLORS = {
-  '😊': '#a78bfa',
-  '😐': '#888',
-  '😢': '#60a5fa',
-  '😡': '#f87171',
-  '😴': '#fbbf24',
-};
-
 const INSIGHT_EMO_ORDER = ['😊', '😐', '😢', '😡', '😴'];
+
+/** 다크·라이트 모달 배경에 맞춘 감정 막대 색 */
+function getInsightEmoColorMap() {
+  const light =
+    document.documentElement.getAttribute('data-teacher-theme') === 'light';
+  if (light) {
+    return {
+      '😊': '#7c3aed',
+      '😐': '#575f6a',
+      '😢': '#0284c7',
+      '😡': '#e11d48',
+      '😴': '#ca8a04',
+    };
+  }
+  return {
+    '😊': '#c4b5fd',
+    '😐': '#94a3b8',
+    '😢': '#38bdf8',
+    '😡': '#fb7185',
+    '😴': '#fcd34d',
+  };
+}
 
 let insightOpenForId = null;
 let insightCalYear = new Date().getFullYear();
@@ -708,11 +838,14 @@ function renderInsightGraph() {
   });
 
   const max = Math.max(1, ...keys.map(k => counts[k]));
+  const colorMap = getInsightEmoColorMap();
+  const isLightInsight =
+    document.documentElement.getAttribute('data-teacher-theme') === 'light';
 
   keys.forEach(em => {
     const n = counts[em];
     const pct = Math.round((n / max) * 100);
-    const color = INSIGHT_EMO_COLORS[em] || '#888';
+    const color = colorMap[em] || (isLightInsight ? '#64748b' : '#9ca3af');
     const row = document.createElement('div');
     row.className = 'insight-graph-row';
     row.innerHTML = `
@@ -725,6 +858,8 @@ function renderInsightGraph() {
     container.appendChild(row);
   });
 }
+
+window.renderInsightGraph = renderInsightGraph;
 
 function insightCalPrevMonth() {
   if (insightCalMonth === 0) {

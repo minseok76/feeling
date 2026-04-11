@@ -27,6 +27,16 @@ function syncTeacherThemeToDom(theme) {
     toggle.classList.toggle('on', t === 'dark');
     toggle.setAttribute('aria-checked', t === 'dark' ? 'true' : 'false');
   }
+  try {
+    const ov = document.getElementById('insight-overlay');
+    if (
+      ov &&
+      ov.style.display === 'flex' &&
+      typeof window.renderInsightGraph === 'function'
+    ) {
+      window.renderInsightGraph();
+    }
+  } catch (e) {}
 }
 
 function applyTeacherTheme(theme) {

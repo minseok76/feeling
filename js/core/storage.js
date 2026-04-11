@@ -222,6 +222,122 @@ function applyRosterProfilesToStudents(students) {
 }
 
 // =====================
+// 학급 만들기 · 학급 코드 연결 (같은 브라우저 localStorage)
+// 선생님: 교사 앱 설정에서 학급 생성 → 코드 안내
+// 학생: 코드 입력으로 연결 (선생님과 같은 브라우저에 학급 데이터가 있어야 매칭됨)
+// =====================
+
+const LS_CLASS_ROOM_KEY = 'emotion-checkin-class-room';
+const LS_STUDENT_LINKED_CLASS_CODE_KEY = 'emotion-checkin-student-linked-class-code';
+
+function normalizeClassJoinCode(raw) {
+  return String(raw || '')
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '');
+}
+
+function generateClassJoinCode() {
+  const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  let s = '';
+  for (let i = 0; i < 6; i++) {
+    s += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return s;
+}
+
+function getClassRoom() {
+  try {
+    const r = localStorage.getItem(LS_CLASS_ROOM_KEY);
+    if (!r) return null;
+    const o = JSON.parse(r);
+    if (!o || typeof o.code !== 'string' || typeof o.name !== 'string') return null;
+    const code = normalizeClassJoinCode(o.code);
+    const name = String(o.name || '').trim();
+    if (!code || !name) return null;
+    return {
+      name,
+      code,
+      createdAt: o.createdAt || null,
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+function setClassRoom(name, code) {
+  const n = String(name || '').trim() || '우리 학급';
+  const c = normalizeClassJoinCode(code);
+  if (!c) return false;
+  localStorage.setItem(
+    LS_CLASS_ROOM_KEY,
+    JSON.stringify({ name: n, code: c, createdAt: new Date().toISOString() })
+  );
+  notifyEmotionAppSync('class-room');
+  return true;
+}
+
+function clearClassRoom() {
+  localStorage.removeItem(LS_CLASS_ROOM_KEY);
+  clearStudentLinkedClassCode();
+  notifyEmotionAppSync('class-room');
+}
+
+function getStudentLinkedClassCode() {
+  try {
+    const c = localStorage.getItem(LS_STUDENT_LINKED_CLASS_CODE_KEY);
+    return c ? normalizeClassJoinCode(c) : '';
+  } catch (e) {
+    return '';
+  }
+}
+
+function setStudentLinkedClassCode(code) {
+  const c = normalizeClassJoinCode(code);
+  if (!c) {
+    localStorage.removeItem(LS_STUDENT_LINKED_CLASS_CODE_KEY);
+  } else {
+    localStorage.setItem(LS_STUDENT_LINKED_CLASS_CODE_KEY, c);
+  }
+  notifyEmotionAppSync('class-room');
+}
+
+function clearStudentLinkedClassCode() {
+  localStorage.removeItem(LS_STUDENT_LINKED_CLASS_CODE_KEY);
+  notifyEmotionAppSync('class-room');
+}
+
+/**
+ * 선생님이 만든 학급 코드와 일치하면 학생 쪽에 연결 저장
+ * @returns {{ ok: true, className: string } | { ok: false, error: string }}
+ */
+function tryMatchStudentClassCode(input) {
+  const room = getClassRoom();
+  if (!room) {
+    return {
+      ok: false,
+      error:
+        '이 기기에는 아직 학급이 없어요. 선생님이 교사 앱 설정에서 학급을 만든 뒤, 같은 브라우저(예: 같은 Chrome)에서 코드를 알려 주세요.',
+    };
+  }
+  const raw = normalizeClassJoinCode(input);
+  if (!raw) {
+    return { ok: false, error: '학급 코드를 입력해 주세요.' };
+  }
+  if (raw !== room.code) {
+    return { ok: false, error: '코드가 맞지 않아요. 선생님께 다시 확인해 주세요.' };
+  }
+  setStudentLinkedClassCode(raw);
+  return { ok: true, className: room.name };
+}
+
+function isStudentClassLinkActive() {
+  const room = getClassRoom();
+  const link = getStudentLinkedClassCode();
+  return !!(room && link && link === room.code);
+}
+
+// =====================
 // 교사 대시보드 전용 계정 (학생 계정과 별도 키)
 // =====================
 

@@ -24,16 +24,42 @@
   <div id="auth-gate" class="auth-gate" aria-label="로그인">
     <div class="auth-card">
       <h1 class="auth-title">감정 체크인</h1>
-      <p class="auth-lead">선생님이 만들어 준 아이디·비밀번호로 로그인하세요. 계정 만들기는 교사 대시보드의 <strong>설정</strong>에서만 할 수 있어요. 계정·감정 기록은 이 브라우저(기기)에만 저장돼요.</p>
+      <p class="auth-lead">로그인하거나 <strong>회원가입</strong>으로 계정을 만들 수 있어요. 선생님이 만든 계정으로도 로그인할 수 있어요. <strong>학급 코드</strong> 연결은 앱에 들어간 뒤 <strong>설정</strong>에서 할 수 있어요. (데이터는 이 기기 브라우저에만 저장돼요.)</p>
       <p id="auth-error-global" class="auth-msg auth-msg--error"></p>
-      <form id="form-login" class="auth-form" autocomplete="on">
-        <label class="auth-label" for="login-userid">아이디 <span class="auth-hint">(영문·숫자 3~30자)</span></label>
-        <input class="auth-input" id="login-userid" autocomplete="username" required>
-        <label class="auth-label" for="login-password">비밀번호</label>
-        <input class="auth-input" type="password" id="login-password" autocomplete="current-password" required>
-        <button type="submit" class="auth-submit">로그인</button>
-        <p id="auth-error-login" class="auth-msg auth-msg--error"></p>
-      </form>
+      <div class="auth-tabs" role="tablist" aria-label="로그인 또는 회원가입">
+        <button type="button" class="auth-tab active" id="auth-tab-login" role="tab" aria-selected="true" data-auth-tab="login">로그인</button>
+        <button type="button" class="auth-tab" id="auth-tab-signup" role="tab" aria-selected="false" data-auth-tab="signup">회원가입</button>
+      </div>
+      <div id="auth-panel-login" class="auth-panel">
+        <form id="form-login" class="auth-form" autocomplete="on">
+          <label class="auth-label" for="login-userid">아이디 <span class="auth-hint">(영문 소문자·숫자 3~30자)</span></label>
+          <input class="auth-input" id="login-userid" autocomplete="username" required>
+          <label class="auth-label" for="login-password">비밀번호</label>
+          <input class="auth-input" type="password" id="login-password" autocomplete="current-password" required>
+          <button type="submit" class="auth-submit">로그인</button>
+          <p id="auth-error-login" class="auth-msg auth-msg--error"></p>
+        </form>
+      </div>
+      <div id="auth-panel-signup" class="auth-panel" style="display:none;">
+        <form id="form-signup" class="auth-form" autocomplete="on">
+          <label class="auth-label" for="signup-name">이름</label>
+          <input class="auth-input" id="signup-name" maxlength="30" placeholder="홍길동" autocomplete="name" required>
+          <label class="auth-label" for="signup-grade">학년</label>
+          <input class="auth-input" id="signup-grade" maxlength="40" placeholder="예: 중학교 2학년" autocomplete="off" required>
+          <label class="auth-label" for="signup-class">반</label>
+          <input class="auth-input" id="signup-class" maxlength="20" placeholder="예: 3반" autocomplete="off" required>
+          <label class="auth-label" for="signup-student-number">번호(자리·출석번호) <span class="auth-hint">반에서 쓰는 번호</span></label>
+          <input class="auth-input" id="signup-student-number" maxlength="20" placeholder="예: 15" autocomplete="off" required>
+          <label class="auth-label" for="signup-userid">로그인 아이디 <span class="auth-hint">(영문 소문자·숫자 3~30자)</span></label>
+          <input class="auth-input" id="signup-userid" maxlength="30" autocomplete="username" required>
+          <label class="auth-label" for="signup-password">비밀번호 <span class="auth-hint">(6자 이상)</span></label>
+          <input class="auth-input" type="password" id="signup-password" autocomplete="new-password" required>
+          <label class="auth-label" for="signup-password2">비밀번호 확인</label>
+          <input class="auth-input" type="password" id="signup-password2" autocomplete="new-password" required>
+          <button type="submit" class="auth-submit">가입하기</button>
+          <p id="auth-error-signup" class="auth-msg auth-msg--error"></p>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -48,12 +74,13 @@
       <div class="scroll-area">
         <div id="teacher-banner" class="teacher-banner" style="display:none;" role="status">
           <div class="teacher-banner-inner">
-            <span class="teacher-banner-label">선생님 메시지</span>
+            <span class="teacher-banner-label">전체 공지</span>
             <p class="teacher-banner-text" id="teacher-banner-text"></p>
             <button type="button" class="teacher-banner-close" id="teacher-banner-close" aria-label="닫기">×</button>
           </div>
         </div>
         <p class="home-display-name" id="home-display-name"></p>
+        <p id="home-class-badge" class="home-class-badge" style="display:none;" role="status"></p>
         <p class="greeting">안녕하세요! 👋</p>
         <p class="sub">오늘 기분은 어때요?</p>
         <div class="big-card">
@@ -139,38 +166,23 @@
       <div class="scroll-area">
         <div style="text-align:center;margin-bottom:20px;">
           <div class="avatar-circle">🎓</div>
-          <p class="profile-name">학생 프로필</p>
-          <p class="profile-sub" id="profile-login-id"></p>
-          <p class="profile-sub">오늘도 화이팅!</p>
+          <p class="profile-name" id="settings-profile-name">—</p>
+          <p class="profile-sub" id="profile-readonly-summary"></p>
+          <p class="profile-sub">이름·번호(자리) 등 변경은 선생님께 요청해 주세요.</p>
         </div>
-        <div class="set-section set-profile-guard">
-          <p class="set-label" style="margin-bottom:4px;">이름·학번·학년·반</p>
-          <p class="set-sub" style="margin-bottom:12px;">계정에 저장된 정보예요. 수정하려면 아래에 비밀번호를 입력한 뒤 <strong>확인</strong>을 눌러 주세요.</p>
-          <div class="set-row">
-            <div><p class="set-label">이름</p><p class="set-sub">교사 화면과 연동돼요</p></div>
-            <input class="name-input profile-guard-field" id="user-name" placeholder="이름 입력" disabled>
-          </div>
-          <div class="set-row">
-            <div><p class="set-label">학번</p><p class="set-sub">명단 번호와 맞추면 연동이 쉬워요</p></div>
-            <input class="name-input profile-guard-field" id="user-school-number" placeholder="예: 15번" style="width:120px;" disabled>
-          </div>
-          <div class="set-row">
-            <div><p class="set-label">학년</p></div>
-            <input class="name-input profile-guard-field" id="user-grade" placeholder="고등학교 2학년" style="width:160px;text-align:right;" disabled>
-          </div>
-          <div class="set-row">
-            <div><p class="set-label">반</p></div>
-            <input class="name-input profile-guard-field" id="user-class" placeholder="3반" style="width:100px;text-align:right;" disabled>
-          </div>
-          <div class="set-profile-unlock">
-            <label class="auth-label" for="settings-profile-password" style="margin-top:8px;">비밀번호 확인</label>
-            <div class="set-profile-unlock-row">
-              <input class="name-input" type="password" id="settings-profile-password" autocomplete="current-password" placeholder="로그인 비밀번호" maxlength="100">
-              <button type="button" class="profile-unlock-btn" id="btn-unlock-profile">확인</button>
+        <div class="set-section">
+          <p class="set-label">학급 연결</p>
+          <p class="set-sub" id="settings-class-hint">선생님이 알려 준 학급 코드를 입력하면 홈에 학급 이름이 표시돼요. (로그인 화면에서는 연결할 수 없어요.)</p>
+          <p id="settings-class-linked" class="settings-class-linked" style="display:none;"></p>
+          <div id="settings-class-form-wrap">
+            <label class="auth-label" for="settings-class-code-input">학급 코드</label>
+            <input class="name-input" id="settings-class-code-input" maxlength="12" autocomplete="off" autocapitalize="characters" placeholder="6자리 코드" inputmode="text" style="width:100%;max-width:280px;box-sizing:border-box;">
+            <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+              <button type="button" class="profile-unlock-btn" id="settings-class-link-btn">연결하기</button>
+              <button type="button" class="profile-unlock-btn" id="settings-class-unlink-btn" style="opacity:0.85;">연결 해제</button>
             </div>
-            <p id="settings-profile-unlock-error" class="auth-msg auth-msg--error" style="margin-top:8px;"></p>
-            <p id="settings-profile-unlocked-msg" class="set-sub" style="margin-top:6px;color:#a78bfa;display:none;">지금은 수정할 수 있어요. 다른 탭으로 나가면 다시 잠깁니다.</p>
           </div>
+          <p id="settings-class-msg" class="auth-msg" style="margin-top:10px;"></p>
         </div>
         <div class="set-section">
           <div class="set-row">
@@ -247,6 +259,7 @@
   <script src="js/core/student-accounts.js"></script>
   <script src="js/student/charts.js"></script>
   <script src="js/student/ui.js"></script>
+  <script src="js/student/student-class-link.js"></script>
   <script src="js/student/auth.js"></script>
   <script src="js/student/theme.js"></script>
   <script src="js/student/app.js"></script>

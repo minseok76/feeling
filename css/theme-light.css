@@ -276,3 +276,10 @@ html[data-theme="light"] .auth-input {
   background: #f8fafc;
   color: #1e293b;
 }
+
+html[data-theme="light"] .settings-class-linked,
+html[data-theme="light"] .home-class-badge {
+  color: #4338ca;
+  background: #eef2ff;
+  border-color: #c7d2fe;
+}

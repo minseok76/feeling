@@ -15,7 +15,11 @@ const FIREBASE_MODE = false;
 
 const LOCAL_STUDENT_ID = 'local-1';
 const LS_USER_NAME_KEY = 'emotion-checkin-user-name';
-const STUDENTS_JSON_URL = 'data/students.json';
+function getStudentsJsonUrl() {
+  return typeof window.emotionCheckinResolve === 'function'
+    ? window.emotionCheckinResolve('data/students.json')
+    : 'data/students.json';
+}
 
 let rosterCache = null;
 
@@ -47,7 +51,7 @@ function normalizeSchoolNumber(n) {
 async function loadRosterFromJson() {
   if (rosterCache) return rosterCache;
   try {
-    const res = await fetch(STUDENTS_JSON_URL, { cache: 'no-store' });
+    const res = await fetch(getStudentsJsonUrl(), { cache: 'no-store' });
     if (!res.ok) throw new Error(res.statusText);
     const data = await res.json();
     const raw = Array.isArray(data.students) ? data.students : [];
@@ -78,6 +82,29 @@ function rosterWithProfiles(list) {
     return applyRosterProfilesToStudents(cloneRoster(list));
   }
   return cloneRoster(list);
+}
+
+/** JSON 명단에서 교사가 숨긴 행 제외 + 교사 추가 학생 병합 후 프로필 오버레이 */
+async function buildBaseRosterMerged() {
+  const raw = await loadRosterFromJson();
+  const hidden =
+    typeof getTeacherHiddenJsonIds === 'function'
+      ? new Set(getTeacherHiddenJsonIds())
+      : new Set();
+  const filtered = raw.filter(s => !hidden.has(Number(s.id)));
+  const base = cloneRoster(filtered);
+  const rows =
+    typeof getTeacherCustomRoster === 'function' ? getTeacherCustomRoster() : [];
+  const custom = rows.map(r => ({
+    id: r.id,
+    userId: r.userId ? String(r.userId).trim().toLowerCase() : undefined,
+    name: String(r.name || '').trim() || '이름 없음',
+    number: String(r.number || '').trim(),
+    gradeLabel: String(r.gradeLabel || '').trim(),
+    classLabel: String(r.classLabel || '').trim(),
+    emotions: [],
+  }));
+  return rosterWithProfiles([...base, ...custom]);
 }
 
 function buildStudentsFromLocalStorage() {
@@ -120,7 +147,7 @@ function buildStudentsFromLocalStorage() {
 }
 
 async function buildHybridStudents() {
-  const base = rosterWithProfiles(await loadRosterFromJson());
+  const base = await buildBaseRosterMerged();
   if (typeof getEmotions !== 'function') return base;
 
   const raw = getEmotions();
@@ -196,7 +223,7 @@ async function fetchAllStudents() {
   if (DATA_MODE === 'hybrid') {
     return buildHybridStudents();
   }
-  return rosterWithProfiles(await loadRosterFromJson());
+  return buildBaseRosterMerged();
 }
 
 async function fetchStudent(studentId) {
@@ -211,18 +238,19 @@ async function fetchStudent(studentId) {
     const list = await buildHybridStudents();
     return list.find(s => s.id === studentId);
   }
-  const roster = rosterWithProfiles(await loadRosterFromJson());
+  const roster = await buildBaseRosterMerged();
   return roster.find(s => s.id === studentId);
 }
 
 function isAlertStudent(student) {
   const alertEmos = ['😢', '😡'];
-  const recent = student.emotions.slice(0, 3);
+  const recent = (student.emotions || []).slice(0, 3);
   return recent.length >= 3 && recent.every(e => alertEmos.includes(e.emo));
 }
 
 function hasTodayRecord(student) {
-  if (student.emotions.length === 0) return false;
+  const emo = student.emotions || [];
+  if (emo.length === 0) return false;
   const todayStr = new Date().toDateString();
-  return new Date(student.emotions[0].date).toDateString() === todayStr;
+  return new Date(emo[0].date).toDateString() === todayStr;
 }

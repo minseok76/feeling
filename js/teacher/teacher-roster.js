@@ -1,5 +1,5 @@
 /* ===========================
-   교사 > 학생관리 패널
+   교사 > 설정: 명단 관리·학생 로그인 계정 만들기
 =========================== */
 
 let teacherRosterEditingId = null;
@@ -132,7 +132,7 @@ function renderTeacherManageList(students) {
 
   if (!students || students.length === 0) {
     wrap.innerHTML =
-      '<p class="teacher-manage-empty">등록된 학생이 없어요. 아래에서 추가하거나 data/students.json 명단을 확인하세요.</p>';
+      '<p class="teacher-manage-empty">등록된 학생이 없어요. 위 양식에서 추가하거나 data/students.json 명단을 확인하세요. 로그인만 쓰게 하려면 <strong>학생 계정</strong> 탭을 이용해 주세요.</p>';
     return;
   }
 
@@ -183,6 +183,53 @@ function renderTeacherManageList(students) {
   });
 }
 
+function resetTeacherStudentAccountForm() {
+  [
+    'teacher-acct-name',
+    'teacher-acct-student-number',
+    'teacher-acct-grade',
+    'teacher-acct-class',
+    'teacher-acct-userid',
+    'teacher-acct-password',
+    'teacher-acct-password2',
+  ].forEach(function (id) {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const err = document.getElementById('teacher-acct-error');
+  if (err) err.textContent = '';
+}
+
+function initTeacherStudentAccountForm() {
+  const form = document.getElementById('form-teacher-create-student-account');
+  if (!form || form.dataset.acctWired === '1') return;
+  form.dataset.acctWired = '1';
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const errEl = document.getElementById('teacher-acct-error');
+    if (errEl) errEl.textContent = '';
+    if (typeof createStudentLoginAccount !== 'function') {
+      if (errEl) errEl.textContent = '계정 기능을 불러오지 못했어요. 페이지를 새로고침해 주세요.';
+      return;
+    }
+    const res = await createStudentLoginAccount({
+      name: (document.getElementById('teacher-acct-name') || {}).value,
+      studentNumber: (document.getElementById('teacher-acct-student-number') || {}).value,
+      gradeLabel: (document.getElementById('teacher-acct-grade') || {}).value,
+      classLabel: (document.getElementById('teacher-acct-class') || {}).value,
+      userId: (document.getElementById('teacher-acct-userid') || {}).value,
+      password: (document.getElementById('teacher-acct-password') || {}).value,
+      password2: (document.getElementById('teacher-acct-password2') || {}).value,
+    });
+    if (!res.ok) {
+      if (errEl) errEl.textContent = res.error || '만들 수 없어요.';
+      return;
+    }
+    resetTeacherStudentAccountForm();
+    if (typeof refreshDashboard === 'function') await refreshDashboard();
+  });
+}
+
 function initTeacherRosterPanel() {
   const form = document.getElementById('teacher-roster-form');
   if (form) {
@@ -197,4 +244,5 @@ function initTeacherRosterPanel() {
       resetTeacherRosterForm();
     });
   }
+  initTeacherStudentAccountForm();
 }

@@ -57,6 +57,23 @@ html.teacher-page[data-teacher-theme='light'] .teacher-desk-tab.is-active {
   color: #5b21b6;
 }
 
+html.teacher-page[data-teacher-theme='light'] .teacher-settings-subtab {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #475569;
+}
+
+html.teacher-page[data-teacher-theme='light'] .teacher-settings-subtab:hover {
+  color: #5b21b6;
+  border-color: #c4b5fd;
+}
+
+html.teacher-page[data-teacher-theme='light'] .teacher-settings-subtab.is-active {
+  background: #ede9fe;
+  border-color: #c4b5fd;
+  color: #5b21b6;
+}
+
 html.teacher-page[data-teacher-theme='light'] .summary-card,
 html.teacher-page[data-teacher-theme='light'] .student-list-section,
 html.teacher-page[data-teacher-theme='light'] .detail-panel,

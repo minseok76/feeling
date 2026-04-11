@@ -24,12 +24,8 @@
   <div id="auth-gate" class="auth-gate" aria-label="로그인">
     <div class="auth-card">
       <h1 class="auth-title">감정 체크인</h1>
-      <p class="auth-lead">이름·아이디·비밀번호로 로그인하거나 회원가입하세요. 계정·감정 기록은 이 브라우저(기기)에만 저장돼요.</p>
+      <p class="auth-lead">선생님이 만들어 준 아이디·비밀번호로 로그인하세요. 계정 만들기는 교사 대시보드의 <strong>설정</strong>에서만 할 수 있어요. 계정·감정 기록은 이 브라우저(기기)에만 저장돼요.</p>
       <p id="auth-error-global" class="auth-msg auth-msg--error"></p>
-      <div class="auth-tabs">
-        <button type="button" class="auth-tab active" id="tab-login">로그인</button>
-        <button type="button" class="auth-tab" id="tab-signup">회원가입</button>
-      </div>
       <form id="form-login" class="auth-form" autocomplete="on">
         <label class="auth-label" for="login-userid">아이디 <span class="auth-hint">(영문·숫자 3~30자)</span></label>
         <input class="auth-input" id="login-userid" autocomplete="username" required>
@@ -37,24 +33,6 @@
         <input class="auth-input" type="password" id="login-password" autocomplete="current-password" required>
         <button type="submit" class="auth-submit">로그인</button>
         <p id="auth-error-login" class="auth-msg auth-msg--error"></p>
-      </form>
-      <form id="form-signup" class="auth-form" style="display:none;" autocomplete="on">
-        <label class="auth-label" for="signup-name">이름</label>
-        <input class="auth-input" id="signup-name" maxlength="30" placeholder="홍길동" required>
-        <label class="auth-label" for="signup-student-number">학번</label>
-        <input class="auth-input" id="signup-student-number" maxlength="20" placeholder="예: 15번 또는 15" required>
-        <label class="auth-label" for="signup-grade">학년</label>
-        <input class="auth-input" id="signup-grade" maxlength="40" placeholder="예: 고등학교 2학년" required>
-        <label class="auth-label" for="signup-class">반</label>
-        <input class="auth-input" id="signup-class" maxlength="20" placeholder="예: 3반" required>
-        <label class="auth-label" for="signup-userid">아이디 <span class="auth-hint">(영문·숫자 3~30자)</span></label>
-        <input class="auth-input" id="signup-userid" maxlength="30" autocomplete="username" required>
-        <label class="auth-label" for="signup-password">비밀번호 <span class="auth-hint">(6자 이상)</span></label>
-        <input class="auth-input" type="password" id="signup-password" autocomplete="new-password" required>
-        <label class="auth-label" for="signup-password2">비밀번호 확인</label>
-        <input class="auth-input" type="password" id="signup-password2" autocomplete="new-password" required>
-        <button type="submit" class="auth-submit">회원가입</button>
-        <p id="auth-error-signup" class="auth-msg auth-msg--error"></p>
       </form>
     </div>
   </div>
@@ -167,7 +145,7 @@
         </div>
         <div class="set-section set-profile-guard">
           <p class="set-label" style="margin-bottom:4px;">이름·학번·학년·반</p>
-          <p class="set-sub" style="margin-bottom:12px;">회원가입 때 입력한 정보예요. 수정하려면 아래에 비밀번호를 입력한 뒤 <strong>확인</strong>을 눌러 주세요.</p>
+          <p class="set-sub" style="margin-bottom:12px;">계정에 저장된 정보예요. 수정하려면 아래에 비밀번호를 입력한 뒤 <strong>확인</strong>을 눌러 주세요.</p>
           <div class="set-row">
             <div><p class="set-label">이름</p><p class="set-sub">교사 화면과 연동돼요</p></div>
             <input class="name-input profile-guard-field" id="user-name" placeholder="이름 입력" disabled>
@@ -266,6 +244,7 @@
 
   <script src="js/core/paths.js"></script>
   <script src="js/core/storage.js"></script>
+  <script src="js/core/student-accounts.js"></script>
   <script src="js/student/charts.js"></script>
   <script src="js/student/ui.js"></script>
   <script src="js/student/auth.js"></script>

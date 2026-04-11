@@ -1,8 +1,8 @@
 /* ===========================
    js/student/auth.js
-   내부 로그인 / 회원가입 (Firebase 없음)
+   내부 로그인 (Firebase 없음). 계정 생성은 교사 설정 화면에서만 합니다.
    계정: getLocalAccounts / setLocalAccounts (storage.js)
-   학번·학년·반은 교사 명단 프로필(mergeRosterStudentProfile)과 연동됩니다.
+   공통: hashPassword, validateUserId, linkStudentLoginToJsonRoster → student-accounts.js
 =========================== */
 
 const LS_SESSION_USER_KEY = 'emotion-checkin-logged-user';
@@ -99,34 +99,6 @@ function setAccounts(obj) {
   if (typeof setLocalAccounts === 'function') setLocalAccounts(obj);
 }
 
-function normalizeUserId(userId) {
-  return String(userId).trim().toLowerCase();
-}
-
-function validateUserId(userId) {
-  const s = normalizeUserId(userId);
-  if (!/^[a-z0-9._-]{3,30}$/.test(s)) {
-    throw new Error('아이디는 영문 소문자·숫자·._- 만, 3~30자여야 해요.');
-  }
-  return s;
-}
-
-async function hashPassword(password) {
-  try {
-    if (globalThis.crypto && globalThis.crypto.subtle) {
-      const enc = new TextEncoder().encode(password + '|emotion-checkin');
-      const buf = await globalThis.crypto.subtle.digest('SHA-256', enc);
-      return Array.from(new Uint8Array(buf))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
-    }
-  } catch (e) {}
-  let h = 5381;
-  const s = password + '|emotion-checkin';
-  for (let i = 0; i < s.length; i++) h = (Math.imul(33, h) + s.charCodeAt(i)) | 0;
-  return 'fb_' + (h >>> 0).toString(16);
-}
-
 function storageUidForLoginId(loginId) {
   return 'local_' + loginId;
 }
@@ -168,35 +140,6 @@ function clearSessionExtras() {
   localStorage.removeItem(LS_SN_KEY);
   localStorage.removeItem(LS_GRADE_KEY);
   localStorage.removeItem(LS_CLASS_KEY);
-}
-
-async function linkAccountToRosterRow(userId, profile) {
-  if (typeof mergeRosterStudentProfile !== 'function') return;
-  try {
-    const rosterUrl =
-      typeof window.emotionCheckinResolve === 'function'
-        ? window.emotionCheckinResolve('data/students.json')
-        : 'data/students.json';
-    const res = await fetch(rosterUrl, { cache: 'no-store' });
-    if (!res.ok) return;
-    const data = await res.json();
-    const students = Array.isArray(data.students) ? data.students : [];
-    const found = students.find(
-      s => String(s.userId || '').toLowerCase() === userId.toLowerCase()
-    );
-    if (!found) return;
-    mergeRosterStudentProfile(found.id, {
-      name: profile.name,
-      number: profile.studentNumber,
-      gradeLabel: profile.gradeLabel,
-      classLabel: profile.classLabel,
-    });
-    const acc = getAccounts();
-    if (acc[userId]) {
-      acc[userId].linkedRosterId = found.id;
-      setAccounts(acc);
-    }
-  } catch (e) {}
 }
 
 function applySession(loginId) {
@@ -317,25 +260,7 @@ function onAuthOk() {
   if (typeof onStudentLogin === 'function') onStudentLogin();
 }
 
-function switchAuthTab(isSignup) {
-  const formLogin = document.getElementById('form-login');
-  const formSignup = document.getElementById('form-signup');
-  const tabLogin = document.getElementById('tab-login');
-  const tabSignup = document.getElementById('tab-signup');
-  if (formLogin) formLogin.style.display = isSignup ? 'none' : 'block';
-  if (formSignup) formSignup.style.display = isSignup ? 'block' : 'none';
-  if (tabLogin) tabLogin.classList.toggle('active', !isSignup);
-  if (tabSignup) tabSignup.classList.toggle('active', !!isSignup);
-  setAuthError('auth-error-login', '');
-  setAuthError('auth-error-signup', '');
-}
-
 function wireAuthForms() {
-  const tabLogin = document.getElementById('tab-login');
-  const tabSignup = document.getElementById('tab-signup');
-  if (tabLogin) tabLogin.addEventListener('click', function () { switchAuthTab(false); });
-  if (tabSignup) tabSignup.addEventListener('click', function () { switchAuthTab(true); });
-
   const formLogin = document.getElementById('form-login');
   if (formLogin) {
     formLogin.addEventListener('submit', async function (e) {
@@ -352,76 +277,22 @@ function wireAuthForms() {
       const accounts = getAccounts();
       const acc = accounts[userId];
       if (!acc) {
-        setAuthError('auth-error-login', '아이디 또는 비밀번호가 맞지 않아요.');
+        setAuthError(
+          'auth-error-login',
+          '아이디 또는 비밀번호가 맞지 않아요. 계정은 교사 대시보드 설정에서 만든 뒤 안내해 주세요.'
+        );
         return;
       }
       const h = await hashPassword(password);
       if (h !== acc.passwordHash) {
-        setAuthError('auth-error-login', '아이디 또는 비밀번호가 맞지 않아요.');
+        setAuthError(
+          'auth-error-login',
+          '아이디 또는 비밀번호가 맞지 않아요. 계정은 교사 대시보드 설정에서 만든 뒤 안내해 주세요.'
+        );
         return;
       }
       applySession(userId);
-      void linkAccountToRosterRow(userId, acc);
-      onAuthOk();
-    });
-  }
-
-  const formSignup = document.getElementById('form-signup');
-  if (formSignup) {
-    formSignup.addEventListener('submit', async function (e) {
-      e.preventDefault();
-      setAuthError('auth-error-signup', '');
-      const name = document.getElementById('signup-name').value.trim();
-      const studentNumber = document.getElementById('signup-student-number').value.trim();
-      const gradeLabel = document.getElementById('signup-grade').value.trim();
-      const classLabel = document.getElementById('signup-class').value.trim();
-      let userId;
-      try {
-        userId = validateUserId(document.getElementById('signup-userid').value);
-      } catch (err) {
-        setAuthError('auth-error-signup', err.message);
-        return;
-      }
-      const password = document.getElementById('signup-password').value;
-      const password2 = document.getElementById('signup-password2').value;
-      if (name.length < 1 || name.length > 30) {
-        setAuthError('auth-error-signup', '이름은 1~30자로 입력해 주세요.');
-        return;
-      }
-      if (studentNumber.length < 1 || studentNumber.length > 20) {
-        setAuthError('auth-error-signup', '학번을 입력해 주세요. (1~20자)');
-        return;
-      }
-      if (!gradeLabel || !classLabel) {
-        setAuthError('auth-error-signup', '학년과 반을 입력해 주세요.');
-        return;
-      }
-      if (password.length < 6) {
-        setAuthError('auth-error-signup', '비밀번호는 6자 이상이에요.');
-        return;
-      }
-      if (password !== password2) {
-        setAuthError('auth-error-signup', '비밀번호가 서로 달라요.');
-        return;
-      }
-      const accounts = getAccounts();
-      if (accounts[userId]) {
-        setAuthError('auth-error-signup', '이미 사용 중인 아이디예요.');
-        return;
-      }
-      const passwordHash = await hashPassword(password);
-      const profile = {
-        name: name,
-        studentNumber: studentNumber,
-        gradeLabel: gradeLabel,
-        classLabel: classLabel,
-        passwordHash: passwordHash,
-        createdAt: new Date().toISOString(),
-      };
-      accounts[userId] = profile;
-      setAccounts(accounts);
-      applySession(userId);
-      await linkAccountToRosterRow(userId, profile);
+      void linkStudentLoginToJsonRoster(userId, acc);
       onAuthOk();
     });
   }
@@ -441,7 +312,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   const saved = localStorage.getItem(LS_SESSION_USER_KEY);
   if (saved && applySession(saved)) {
-    void linkAccountToRosterRow(saved, getAccounts()[saved] || {});
+    void linkStudentLoginToJsonRoster(saved, getAccounts()[saved] || {});
     onAuthOk();
   } else {
     clearSession();

@@ -19,6 +19,7 @@ async function initTeacherDashboard() {
 
   if (typeof initTeacherTheme === 'function') initTeacherTheme();
   if (typeof initTeacherRosterPanel === 'function') initTeacherRosterPanel();
+  if (typeof wireTeacherSettingsSubnav === 'function') wireTeacherSettingsSubnav();
 
   const d = new Date();
   document.getElementById('today-date').textContent =
@@ -239,9 +240,37 @@ function showTeacherView(view) {
 
   if (v === 'group') renderTeacherGroupGrid();
 
+  if (v === 'settings' && typeof showTeacherSettingsSub === 'function') {
+    showTeacherSettingsSub('app');
+  }
+
   if (window.matchMedia('(max-width: 900px)').matches && v !== 'individual') {
     closeTeacherMobileDetailSheet();
   }
+}
+
+function showTeacherSettingsSub(sub) {
+  const key = sub || 'app';
+  document.querySelectorAll('[data-settings-sub]').forEach(function (btn) {
+    const on = btn.getAttribute('data-settings-sub') === key;
+    btn.classList.toggle('is-active', on);
+  });
+  document.querySelectorAll('[data-settings-panel]').forEach(function (panel) {
+    const on = panel.getAttribute('data-settings-panel') === key;
+    panel.classList.toggle('is-active', on);
+  });
+}
+
+function wireTeacherSettingsSubnav() {
+  document.querySelectorAll('[data-settings-sub]').forEach(function (btn) {
+    if (btn.dataset.settingsSubWired === '1') return;
+    btn.dataset.settingsSubWired = '1';
+    btn.addEventListener('click', function () {
+      const k = btn.getAttribute('data-settings-sub');
+      if (k) showTeacherSettingsSub(k);
+    });
+  });
+  showTeacherSettingsSub('app');
 }
 
 function wireTeacherTabNavigation() {
@@ -261,7 +290,7 @@ function renderTeacherGroupGrid() {
 
   if (!allStudents || allStudents.length === 0) {
     grid.innerHTML =
-      '<p class="teacher-group-empty">학생이 없어요. 학생관리에서 추가하거나 명단을 확인하세요.</p>';
+      '<p class="teacher-group-empty">학생이 없어요. 설정의 명단 관리·학생 계정에서 추가하거나 data/students.json 명단을 확인하세요.</p>';
     return;
   }
 

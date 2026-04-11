@@ -75,7 +75,6 @@
   <nav class="teacher-desk-tabs" aria-label="교사 메뉴 (PC)">
     <button type="button" class="teacher-desk-tab is-active" data-teacher-tab="individual" id="teacher-desk-tab-individual">개별보기</button>
     <button type="button" class="teacher-desk-tab" data-teacher-tab="group" id="teacher-desk-tab-group">단체보기</button>
-    <button type="button" class="teacher-desk-tab" data-teacher-tab="manage" id="teacher-desk-tab-manage">학생관리</button>
     <button type="button" class="teacher-desk-tab" data-teacher-tab="settings" id="teacher-desk-tab-settings">설정</button>
   </nav>
 
@@ -195,52 +194,85 @@
       </div>
     </div>
 
-    <div class="teacher-panel" data-teacher-panel="manage" id="teacher-panel-manage">
-      <div class="teacher-manage-inner">
-        <h2 class="teacher-manage-title">학생 추가·관리</h2>
-        <p class="teacher-manage-hint">교사가 추가한 학생은 이 브라우저에만 저장돼요. JSON 명단 학생은 수정하거나 대시보드에서 숨길 수 있어요.</p>
-        <div class="teacher-manage-card">
-          <form id="teacher-roster-form" class="teacher-roster-form" autocomplete="off">
-            <label class="teacher-roster-label" for="teacher-roster-userid">학생 아이디 <span class="teacher-roster-opt">(선택, 로그인 연동 시)</span></label>
-            <input class="teacher-roster-input" id="teacher-roster-userid" maxlength="30" placeholder="영문 소문자·숫자 3~30자" autocomplete="off">
-            <label class="teacher-roster-label" for="teacher-roster-name">이름 <span class="teacher-roster-req">*</span></label>
-            <input class="teacher-roster-input" id="teacher-roster-name" maxlength="30" required placeholder="이름">
-            <label class="teacher-roster-label" for="teacher-roster-number">학번·번호</label>
-            <input class="teacher-roster-input" id="teacher-roster-number" maxlength="20" placeholder="예: 15">
-            <label class="teacher-roster-label" for="teacher-roster-grade">학년</label>
-            <input class="teacher-roster-input" id="teacher-roster-grade" maxlength="40" placeholder="예: 고등학교 2학년">
-            <label class="teacher-roster-label" for="teacher-roster-class">반</label>
-            <input class="teacher-roster-input" id="teacher-roster-class" maxlength="20" placeholder="예: 3반">
-            <div class="teacher-roster-actions">
-              <button type="submit" class="broadcast-btn" id="teacher-roster-submit">학생 추가</button>
-              <button type="button" class="broadcast-btn ghost" id="teacher-roster-cancel-edit">취소</button>
-            </div>
-          </form>
-        </div>
-        <h3 class="teacher-manage-subtitle">현재 명단</h3>
-        <div class="teacher-manage-list" id="teacher-manage-list"></div>
-      </div>
-    </div>
-
     <div class="teacher-panel" data-teacher-panel="settings" id="teacher-panel-settings">
       <div class="teacher-settings-inner">
         <h2 class="teacher-settings-title">설정</h2>
-        <div class="teacher-settings-card">
-          <p class="teacher-settings-row-title">화면 모드</p>
-          <p class="teacher-settings-sub">다크 모드를 끄면 밝은 테마로 바뀌어요.</p>
-          <div class="teacher-settings-toggle-row">
-            <span class="teacher-settings-toggle-lbl">다크 모드</span>
-            <div class="toggle on" id="teacher-settings-dark-toggle" role="switch" aria-checked="true" aria-label="다크 모드"></div>
+        <nav class="teacher-settings-subnav" aria-label="설정 하위 메뉴">
+          <button type="button" class="teacher-settings-subtab is-active" data-settings-sub="app" id="teacher-settings-sub-app">앱</button>
+          <button type="button" class="teacher-settings-subtab" data-settings-sub="accounts" id="teacher-settings-sub-accounts">학생 계정</button>
+          <button type="button" class="teacher-settings-subtab" data-settings-sub="roster" id="teacher-settings-sub-roster">명단 관리</button>
+        </nav>
+
+        <div class="teacher-settings-subpanel is-active" data-settings-panel="app" id="teacher-settings-panel-app">
+          <div class="teacher-settings-card">
+            <p class="teacher-settings-row-title">화면 모드</p>
+            <p class="teacher-settings-sub">다크 모드를 끄면 밝은 테마로 바뀌어요.</p>
+            <div class="teacher-settings-toggle-row">
+              <span class="teacher-settings-toggle-lbl">다크 모드</span>
+              <div class="toggle on" id="teacher-settings-dark-toggle" role="switch" aria-checked="true" aria-label="다크 모드"></div>
+            </div>
+          </div>
+          <div class="teacher-settings-card">
+            <p class="teacher-settings-row-title">계정</p>
+            <button type="button" class="broadcast-btn ghost teacher-settings-fullbtn" id="teacher-settings-logout">로그아웃</button>
+          </div>
+          <div class="teacher-settings-card">
+            <p class="teacher-settings-row-title">앱</p>
+            <a href="index.html" target="_blank" rel="noopener noreferrer" class="back-btn teacher-settings-fullbtn">학생 앱 열기 ↗</a>
+            <p class="teacher-settings-sub teacher-settings-version">버전 1.0.0</p>
           </div>
         </div>
-        <div class="teacher-settings-card">
-          <p class="teacher-settings-row-title">계정</p>
-          <button type="button" class="broadcast-btn ghost teacher-settings-fullbtn" id="teacher-settings-logout">로그아웃</button>
+
+        <div class="teacher-settings-subpanel" data-settings-panel="accounts" id="teacher-settings-panel-accounts">
+          <h3 class="teacher-manage-title teacher-settings-section-title">학생 로그인 계정 만들기</h3>
+          <p class="teacher-manage-hint">학생 앱에서 쓸 아이디·비밀번호와 프로필을 정합니다. 저장은 이 브라우저에만 되며, 학생 앱과 같은 브라우저를 쓰면 바로 로그인할 수 있어요.</p>
+          <div class="teacher-manage-card">
+            <form id="form-teacher-create-student-account" class="teacher-roster-form" autocomplete="off">
+              <label class="teacher-roster-label" for="teacher-acct-name">이름 <span class="teacher-roster-req">*</span></label>
+              <input class="teacher-roster-input" id="teacher-acct-name" maxlength="30" placeholder="홍길동" required>
+              <label class="teacher-roster-label" for="teacher-acct-student-number">학번 <span class="teacher-roster-req">*</span></label>
+              <input class="teacher-roster-input" id="teacher-acct-student-number" maxlength="20" placeholder="예: 15" required>
+              <label class="teacher-roster-label" for="teacher-acct-grade">학년 <span class="teacher-roster-req">*</span></label>
+              <input class="teacher-roster-input" id="teacher-acct-grade" maxlength="40" placeholder="예: 고등학교 2학년" required>
+              <label class="teacher-roster-label" for="teacher-acct-class">반 <span class="teacher-roster-req">*</span></label>
+              <input class="teacher-roster-input" id="teacher-acct-class" maxlength="20" placeholder="예: 3반" required>
+              <label class="teacher-roster-label" for="teacher-acct-userid">로그인 아이디 <span class="teacher-roster-req">*</span> <span class="teacher-roster-opt">(영문 소문자·숫자 3~30자)</span></label>
+              <input class="teacher-roster-input" id="teacher-acct-userid" maxlength="30" autocomplete="username" required>
+              <label class="teacher-roster-label" for="teacher-acct-password">비밀번호 <span class="teacher-roster-req">*</span> <span class="teacher-roster-opt">(6자 이상)</span></label>
+              <input class="teacher-roster-input" type="password" id="teacher-acct-password" autocomplete="new-password" required>
+              <label class="teacher-roster-label" for="teacher-acct-password2">비밀번호 확인 <span class="teacher-roster-req">*</span></label>
+              <input class="teacher-roster-input" type="password" id="teacher-acct-password2" autocomplete="new-password" required>
+              <p id="teacher-acct-error" class="teacher-auth-msg teacher-auth-msg--error" role="status"></p>
+              <div class="teacher-roster-actions">
+                <button type="submit" class="broadcast-btn" id="teacher-acct-submit">계정 만들기</button>
+              </div>
+            </form>
+          </div>
         </div>
-        <div class="teacher-settings-card">
-          <p class="teacher-settings-row-title">앱</p>
-          <a href="index.html" target="_blank" rel="noopener noreferrer" class="back-btn teacher-settings-fullbtn">학생 앱 열기 ↗</a>
-          <p class="teacher-settings-sub teacher-settings-version">버전 1.0.0</p>
+
+        <div class="teacher-settings-subpanel" data-settings-panel="roster" id="teacher-settings-panel-roster">
+          <h3 class="teacher-manage-title teacher-settings-section-title">명단 추가·수정</h3>
+          <p class="teacher-manage-hint">교사가 추가한 학생은 이 브라우저에만 저장돼요. JSON 명단 학생은 수정하거나 대시보드에서 숨길 수 있어요. 로그인 계정이 있는 학생은 <strong>학생 계정</strong> 탭에서 관리하는 것을 권장해요.</p>
+          <div class="teacher-manage-card">
+            <form id="teacher-roster-form" class="teacher-roster-form" autocomplete="off">
+              <label class="teacher-roster-label" for="teacher-roster-userid">학생 아이디 <span class="teacher-roster-opt">(선택, 로그인 연동 시)</span></label>
+              <input class="teacher-roster-input" id="teacher-roster-userid" maxlength="30" placeholder="영문 소문자·숫자 3~30자" autocomplete="off">
+              <label class="teacher-roster-label" for="teacher-roster-name">이름 <span class="teacher-roster-req">*</span></label>
+              <input class="teacher-roster-input" id="teacher-roster-name" maxlength="30" required placeholder="이름">
+              <label class="teacher-roster-label" for="teacher-roster-number">학번·번호</label>
+              <input class="teacher-roster-input" id="teacher-roster-number" maxlength="20" placeholder="예: 15">
+              <label class="teacher-roster-label" for="teacher-roster-grade">학년</label>
+              <input class="teacher-roster-input" id="teacher-roster-grade" maxlength="40" placeholder="예: 고등학교 2학년">
+              <label class="teacher-roster-label" for="teacher-roster-class">반</label>
+              <input class="teacher-roster-input" id="teacher-roster-class" maxlength="20" placeholder="예: 3반">
+              <div class="teacher-roster-actions">
+                <button type="submit" class="broadcast-btn" id="teacher-roster-submit">학생 추가</button>
+                <button type="button" class="broadcast-btn ghost" id="teacher-roster-cancel-edit">취소</button>
+              </div>
+            </form>
+          </div>
+          <h3 class="teacher-manage-subtitle">현재 명단</h3>
+          <div class="teacher-manage-list" id="teacher-manage-list"></div>
         </div>
       </div>
     </div>
@@ -255,10 +287,6 @@
     <button type="button" class="teacher-mtab" data-teacher-tab="group" id="teacher-mtab-group">
       <span class="teacher-mtab-ico" aria-hidden="true">👥</span>
       <span class="teacher-mtab-lbl">단체</span>
-    </button>
-    <button type="button" class="teacher-mtab" data-teacher-tab="manage" id="teacher-mtab-manage">
-      <span class="teacher-mtab-ico" aria-hidden="true">📋</span>
-      <span class="teacher-mtab-lbl">학생관리</span>
     </button>
     <button type="button" class="teacher-mtab" data-teacher-tab="settings" id="teacher-mtab-settings">
       <span class="teacher-mtab-ico" aria-hidden="true">⚙️</span>
@@ -306,6 +334,7 @@
 
   <script src="js/core/paths.js"></script>
   <script src="js/core/storage.js"></script>
+  <script src="js/core/student-accounts.js"></script>
   <script src="js/teacher/teacher-data.js"></script>
   <script src="js/teacher/teacher-theme.js"></script>
   <script src="js/teacher/teacher-app.js"></script>

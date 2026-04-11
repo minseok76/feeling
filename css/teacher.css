@@ -1744,6 +1744,51 @@ body.teacher-body {
   text-align: center;
 }
 
+.teacher-settings-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.teacher-settings-subtab {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #3d3d52;
+  background: #1e1e28;
+  color: #9ca3af;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.teacher-settings-subtab:hover {
+  color: #c4b5fd;
+  border-color: #5b21b655;
+}
+
+.teacher-settings-subtab.is-active {
+  color: #e9d5ff;
+  background: rgba(167, 139, 250, 0.15);
+  border-color: #7c3aed66;
+}
+
+.teacher-settings-subpanel {
+  display: none;
+}
+
+.teacher-settings-subpanel.is-active {
+  display: block;
+}
+
+.teacher-settings-section-title {
+  margin-top: 0;
+}
+
 .teacher-manage-inner,
 .teacher-settings-inner {
   max-width: 1100px;

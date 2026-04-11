@@ -132,6 +132,9 @@ async function initTeacherDashboard() {
       }
       purgeTeacherAccountStoredData(userId);
       delPw.value = '';
+      try {
+        sessionStorage.setItem('emotion-teacher-account-deleted', '1');
+      } catch (e) {}
       location.reload();
     });
   }

@@ -8,11 +8,11 @@ const path = require('path');
 const OUT = path.join(__dirname, '..', 'data', 'students.json');
 
 const EMOS = [
-  { emo: '😊', label: '기분 좋음', notes: ['', '오늘 좋은 일이 있었어요', '친구랑 웃었어요', '수업이 재밌었다', '날씨가 좋았다'] },
-  { emo: '😐', label: '보통', notes: ['', '그냥 보통이에요', '무난한 하루', '별일 없음'] },
-  { emo: '😢', label: '슬픔', notes: ['', '조금 우울해요', '집에 가고 싶다', '친구랑 멀어진 느낌'] },
-  { emo: '😡', label: '화남', notes: ['', '짜증 났어요', '공부하기 싫다', '시끄러웠다'] },
-  { emo: '😴', label: '피곤함', notes: ['', '잠이 부족해요', '야자 때문에', '컨디션이 안 좋아요'] },
+  { emo: '😊', label: '기분 좋음' },
+  { emo: '😐', label: '보통' },
+  { emo: '😢', label: '슬픔' },
+  { emo: '😡', label: '화남' },
+  { emo: '😴', label: '피곤함' },
 ];
 
 const STUDENTS = [
@@ -29,10 +29,6 @@ const STUDENTS = [
   { id: 11, userId: 'jiwoo11', name: '서지우', number: '11번', bias: 1 },
   { id: 12, userId: 'haeun12', name: '안하은', number: '12번', bias: 2 },
 ];
-
-function pick(arr, i) {
-  return arr[i % arr.length];
-}
 
 function buildEmotionsForStudent(student) {
   const emotions = [];
@@ -55,12 +51,11 @@ function buildEmotionsForStudent(student) {
     const hour = 7 + (seed % 10);
     const minute = (seed * 3) % 60;
     dt.setUTCHours(hour, minute, 0, 0);
-    const note = pick(pack.notes, seed);
 
     emotions.push({
       emo: pack.emo,
       label: pack.label,
-      note,
+      note: '',
       date: dt.toISOString(),
     });
   }
@@ -87,6 +82,7 @@ const payload = {
     gradeLabel: '고등학교 2학년',
     classLabel: '3반',
     generatedBy: 'scripts/generate-students-json.js',
+    generatedAt: new Date().toISOString(),
     approxSchoolDaysPerStudent: '~18~24 (주말·무기록일 제외)',
   },
   students,

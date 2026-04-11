@@ -948,6 +948,12 @@
   color: #f472b6;
 }
 
+/* 삭제 완료 등 안내 (에러 클래스 제거 시 상속색이 검정이 되지 않도록) */
+.auth-msg--info {
+  color: #c4b8dc;
+  font-weight: 600;
+}
+
 .auth-input--code {
   font-weight: 800;
   letter-spacing: 0.12em;

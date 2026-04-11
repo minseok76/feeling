@@ -234,6 +234,18 @@ window.teacherSignOut = function () {
 
 document.addEventListener('DOMContentLoaded', function () {
   wireTeacherAuth();
+  try {
+    if (sessionStorage.getItem('emotion-teacher-account-deleted') === '1') {
+      sessionStorage.removeItem('emotion-teacher-account-deleted');
+      const hint = document.getElementById('teacher-auth-post-delete-hint');
+      if (hint) {
+        hint.removeAttribute('hidden');
+        hint.textContent =
+          '계정이 삭제되어 로그아웃되었어요. 교사·학급 관련 이 기기 저장 데이터도 함께 지워졌어요.';
+        hint.classList.remove('teacher-auth-msg--error');
+      }
+    }
+  } catch (e) {}
   if (getValidTeacherSessionId()) {
     showTeacherAppShell();
     if (typeof initTeacherDashboard === 'function') void initTeacherDashboard();

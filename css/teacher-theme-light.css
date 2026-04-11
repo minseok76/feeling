@@ -34,6 +34,10 @@ html.teacher-page[data-teacher-theme='light'] .teacher-roster-manual-heading--in
   border-bottom-color: #e2e8f0;
 }
 
+html.teacher-page[data-teacher-theme='light'] #teacher-auth-post-delete-hint.teacher-auth-msg {
+  color: #475569;
+}
+
 html.teacher-page[data-teacher-theme='light'] .teacher-auth-lead,
 html.teacher-page[data-teacher-theme='light'] .header-sub,
 html.teacher-page[data-teacher-theme='light'] .summary-lbl,

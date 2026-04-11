@@ -269,17 +269,10 @@ function wireDeleteStudentAccount() {
     }
     pw.value = '';
     clearSession();
-    showAuthGate();
-    setStudentAuthTab('login');
-    if (typeof updateStudentClassLinkUiAll === 'function') {
-      updateStudentClassLinkUiAll();
-    }
-    const globalHint = document.getElementById('auth-error-global');
-    if (globalHint) {
-      globalHint.textContent =
-        '계정이 삭제되었어요. 필요하면 다시 가입할 수 있어요.';
-      globalHint.classList.remove('auth-msg--error');
-    }
+    try {
+      sessionStorage.setItem('emotion-student-account-deleted', '1');
+    } catch (e) {}
+    location.reload();
   });
 }
 
@@ -295,8 +288,20 @@ document.addEventListener('DOMContentLoaded', function () {
   const globalErr = document.getElementById('auth-error-global');
   if (globalErr) {
     globalErr.textContent = '';
+    globalErr.classList.remove('auth-msg--info');
     globalErr.classList.add('auth-msg--error');
   }
+  try {
+    if (sessionStorage.getItem('emotion-student-account-deleted') === '1') {
+      sessionStorage.removeItem('emotion-student-account-deleted');
+      if (globalErr) {
+        globalErr.textContent =
+          '계정이 삭제되어 로그아웃되었어요. 필요하면 다시 가입할 수 있어요.';
+        globalErr.classList.remove('auth-msg--error');
+        globalErr.classList.add('auth-msg--info');
+      }
+    }
+  } catch (e) {}
 
   wireAuthForms();
   wireDeleteStudentAccount();
